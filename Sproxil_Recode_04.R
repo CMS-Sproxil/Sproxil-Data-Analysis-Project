@@ -78,16 +78,22 @@ df <- df %>%
     anc_prov_other = dummify(women_anc_provider, "OTHERS"),
     
     # 4. ANC Location
-    anc_loc_gov  = dummify(women_anc_location, "GOVERNMENT"),
+    anc_loc_govhos  = dummify(women_anc_location, "GOVERNMENT HOSPITAL"),
+    anc_loc_govcen  = dummify(women_anc_location, "GOVERNMENT HEALTH CENTER"),
+    anc_loc_govpos  = dummify(women_anc_location, "GOVERNMENT HEALTH POST"),
     anc_loc_pvt  = dummify(women_anc_location, "PRIVATE"),
-    anc_loc_ngo  = dummify(women_anc_location, "NGO"),
-    anc_loc_home = dummify(women_anc_location, "HOME"),
+    anc_loc_ngohos  = dummify(women_anc_location, "NGO HOSPITAL"),
+    anc_loc_ngoclin  = dummify(women_anc_location, "NGO CLINIC"),
+    anc_loc_herhome = dummify(women_anc_location, "HER HOME"),
+    anc_loc_yourhome = dummify(women_anc_location, "YOUR HOME"),
+    anc_loc_other = dummify(women_anc_location, "OTHERS"),
     
     # 5. SP/Fansidar Source
     sp_src_anc   = dummify(women_sp_fansidar_source, "ANTENATAL VISIT"),
-    sp_src_other = dummify(women_sp_fansidar_source, "ANOTHER FACILITY|NON ANTENATAL"),
+    sp_src_nonanc = dummify(women_sp_fansidar_source, "NON ANTENATAL"),
     sp_src_pharm = dummify(women_sp_fansidar_source, "PHARMACY|CHEMIST"),
     sp_src_chew  = dummify(women_sp_fansidar_source, "COMMUNITY HEALTH"),
+    sp_src_other  = dummify(women_sp_fansidar_source, "OTHERS"),
     
     # 6. Child Treatment Advice Location
     child_adv_gov   = dummify(women_child_advice_location, "GOVERNMENT"),
@@ -142,7 +148,7 @@ message("Step 2: Recoding Variables...")
 
 df_recoded <- df %>%
   mutate(
-    # --- A. BINARY VARIABLES (Analytic Standard: 1=Yes, 0=No, 8=DK) ---
+    # --- A. BINARY VARIABLES (1=Yes, 0=No, 8=DK) ---
     across(c(
       prev_has_mosquito_nets, prev_home_sprayed_interior,
       treat_hh_fever_last_2weeks, treat_blood_sample_taken, treat_heard_smc,
@@ -162,18 +168,23 @@ df_recoded <- df %>%
       hh_own_motor_boat, hh_own_canoe, hh_own_keke_napep, hh_has_bank_account,
       hh_mobile_money_usage
     ), ~case_when(
+      is.na(.) ~ NA_real_,
       . == "YES" ~ 1,
       . == "NO" ~ 0,
       str_detect(., "DON'T KNOW|NOT SURE") ~ 8,
-      . == "NO RESPONSE" ~ 9,
       TRUE ~ 9
     )),
     
     # --- B. DEMOGRAPHICS ---
-    demo_gender = case_when(demo_gender == "MALE" ~ 1, demo_gender == "FEMALE" ~ 2, TRUE ~ 9),
+    demo_gender = case_when(
+      is.na(demo_gender) ~ NA_real_,
+      demo_gender == "MALE" ~ 1, 
+      demo_gender == "FEMALE" ~ 2, 
+      TRUE ~ 9
+    ),
     
-    # Education (PDF Page 2, Q105)
     demo_edu_level = case_when(
+      is.na(demo_edu_level) ~ NA_real_,
       str_detect(demo_edu_level, "NEVER") ~ 0,
       str_detect(demo_edu_level, "PRIMARY") ~ 1,
       str_detect(demo_edu_level, "SECONDARY") ~ 2,
@@ -183,6 +194,7 @@ df_recoded <- df %>%
     
     # --- C. NETS ---
     prev_net_brand = case_when(
+      is.na(prev_net_brand) ~ NA_real_,
       prev_net_brand == "LLIN" ~ 10, prev_net_brand == "OLYSET LLIN" ~ 11, prev_net_brand == "ICONLIFE LLIN" ~ 12, 
       prev_net_brand == "DURANET LLIN" ~ 13,
       prev_net_brand == "NETPROTECT LLIN" ~ 14, prev_net_brand == "BASF INTERCEPTOR LLIN" ~ 15, prev_net_brand == "YORKOOL LLIN" ~ 16,
@@ -192,19 +204,21 @@ df_recoded <- df %>%
       prev_net_brand == "OTHER/DON'T KNOW BRAND BUT (LLIN)" ~ 26, 
       prev_net_brand == "OTHER TYPE (NOT LLIN)" ~ 95, 
       prev_net_brand == "OTHER" ~ 96,
-      str_detect(prev_net_brand, "DON'T KNOW") ~ 98, TRUE ~ 99
+      str_detect(prev_net_brand, "DON'T KNOW") ~ 98, 
+      TRUE ~ 99
     ),
     
     prev_net_obtained_how = case_when(
+      is.na(prev_net_obtained_how) ~ NA_real_,
       str_detect(prev_net_obtained_how, "MASS") ~ 1,
       str_detect(prev_net_obtained_how, "ANTE NATAL") ~ 2,
       str_detect(prev_net_obtained_how, "IMMUNIZATION") ~ 3,
       str_detect(prev_net_obtained_how, "OTHER") ~ 96,
-      prev_net_obtained_how == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     prev_net_obtained_where = case_when(
+      is.na(prev_net_obtained_where) ~ NA_real_,
       str_detect(prev_net_obtained_where, "GOVERNMENT") ~ 1,
       str_detect(prev_net_obtained_where, "PRIVATE") ~ 2,
       str_detect(prev_net_obtained_where, "PHARMACY") ~ 3,
@@ -214,12 +228,12 @@ df_recoded <- df %>%
       str_detect(prev_net_obtained_where, "SCHOOL") ~ 7,
       str_detect(prev_net_obtained_where, "OTHER") ~ 96,
       str_detect(prev_net_obtained_where, "DON'T KNOW") ~ 98,
-      prev_net_obtained_where == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     # --- D. TREATMENT & LOCATIONS ---
     prev_first_treatment_location = case_when(    
+      is.na(prev_first_treatment_location) ~ NA_real_,
       str_detect(prev_first_treatment_location, "GOVERNMENT") ~ 1,
       str_detect(prev_first_treatment_location, "PRIVATE HOSPITAL") ~ 2,
       str_detect(prev_first_treatment_location, "NGO") ~ 3,
@@ -230,11 +244,11 @@ df_recoded <- df %>%
       str_detect(prev_first_treatment_location, "CHEMIST") ~ 8,
       str_detect(prev_first_treatment_location, "TRADITIONAL") ~ 10,
       str_detect(prev_first_treatment_location, "RELIGIOUS") ~ 11,
-      prev_first_treatment_location == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     prev_time_to_treatment_facility = case_when(
+      is.na(prev_time_to_treatment_facility) ~ NA_real_,
       str_detect(prev_time_to_treatment_facility, "LESS") ~ 1,
       str_detect(prev_time_to_treatment_facility, "30 MINS") ~ 2,
       str_detect(prev_time_to_treatment_facility, "MORE") ~ 3,
@@ -242,8 +256,9 @@ df_recoded <- df %>%
       TRUE ~ 9
     ),
     
-    # --- E. COSTS (Ordinal - Expanded to avoid Lumping) ---
+    # --- E. COSTS ---
     across(c(treat_test_cost, treat_drug_cost), ~ case_when(
+      is.na(.) ~ NA_real_,
       str_detect(., "FREE") ~ 0,
       str_detect(., "N1 - N999") ~ 1,
       str_detect(., "N1,000 - N1,999") ~ 2,
@@ -262,11 +277,11 @@ df_recoded <- df %>%
       str_detect(., "N14,000 - N14,999") ~ 15,
       str_detect(., "ABOVE N15,000") ~ 16,
       str_detect(., "DON'T KNOW|DONT KNOW|DK") ~ 98,
-      . == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     )),
     
     treat_transport_cost = case_when(
+      is.na(treat_transport_cost) ~ NA_real_,
       str_detect(treat_transport_cost, "FREE") ~ 0,
       str_detect(treat_transport_cost, "N1 - N999") ~ 1,
       str_detect(treat_transport_cost, "N1,000 - N1,999") ~ 2,
@@ -280,20 +295,21 @@ df_recoded <- df %>%
       str_detect(treat_transport_cost, "N9,000 - N9,999") ~ 10,
       str_detect(treat_transport_cost, "ABOVE N10,000") ~ 11,
       str_detect(treat_transport_cost, "DON'T KNOW|DONT KNOW|DK") ~ 98,
-      treat_transport_cost == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     treat_drug_purchase_time = case_when(
+      is.na(treat_drug_purchase_time) ~ NA_real_,
       str_detect(treat_drug_purchase_time, "0 ?[-–] ?4 WEEK|0[-–]4 WEEK") ~ 1,   
       str_detect(treat_drug_purchase_time, "1 ?[-–] ?5 MONTH|5 MONTH") ~ 2,   
       str_detect(treat_drug_purchase_time, "6 ?[-–] ?12 MONTH|6[-–]12 MONTH") ~ 3, 
       str_detect(treat_drug_purchase_time, "OVER ONE YEAR|> ?1 YEAR") ~ 4, 
-      str_detect(treat_drug_purchase_time, "DON'?T KNOW|DONT KNOW|DK") ~ 98,       
+      str_detect(treat_drug_purchase_time, "DON'?T KNOW|DONT KNOW|DK") ~ 8,       
       TRUE ~ 9 
     ),
     
     treat_drug_affordability = case_when(
+      is.na(treat_drug_affordability) ~ NA_real_,
       str_detect(treat_drug_affordability, "VERY AFFORDABLE") ~ 1,
       str_detect(treat_drug_affordability, "SOMEWHAT AFFORDABLE") ~ 2,
       str_detect(treat_drug_affordability, "NEUTRAL") ~ 3,
@@ -305,22 +321,23 @@ df_recoded <- df %>%
     
     # --- F. SMC & VACCINE ---
     treat_children_received_smc = case_when(
+      is.na(treat_children_received_smc) ~ NA_real_,
       treat_children_received_smc == "YES" ~ 1,
       str_detect(treat_children_received_smc, "NO AND I HAVE A CHILD") ~ 0,
-      str_detect(treat_children_received_smc, "NO, I DO NOT HAVE A CHILD") ~ 6, # Ineligible
-      treat_children_received_smc == "NO RESPONSE" ~ 9,
+      str_detect(treat_children_received_smc, "NO, I DO NOT HAVE A CHILD") ~ 6, 
       TRUE ~ 9
     ),
     
     treat_children_received_vaccine = case_when(
+      is.na(treat_children_received_vaccine) ~ NA_real_,
       treat_children_received_vaccine == "YES" ~ 1,
       str_detect(treat_children_received_vaccine, "NO AND I HAVE A CHILD") ~ 0,
-      str_detect(treat_children_received_vaccine, "NO, I DO NOT HAVE A CHILD") ~ 6, # Ineligible
-      treat_children_received_vaccine == "NO RESPONSE" ~ 9,
+      str_detect(treat_children_received_vaccine, "NO, I DO NOT HAVE A CHILD") ~ 6, 
       TRUE ~ 9
     ),
     
     treat_know_smc_drug = case_when(
+      is.na(treat_know_smc_drug) ~ NA_real_,
       str_detect(treat_know_smc_drug, "SULFADOXINE-PYRIMETHAMINE \\+ AMODIAQUINE") ~ 1,
       str_detect(treat_know_smc_drug, "SULFADOXINE-PYRIMETHAMIN") ~ 2,
       str_detect(treat_know_smc_drug, "ARTEMETHER-LUMEFANTRINE") ~ 3,
@@ -329,22 +346,22 @@ df_recoded <- df %>%
       str_detect(treat_know_smc_drug, "PROGUANIL") ~ 6,
       str_detect(treat_know_smc_drug, "OTHERS") ~ 96,
       str_detect(treat_know_smc_drug, "DON'T KNOW") ~ 98,
-      treat_know_smc_drug == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     treat_vaccine_age_knowledge = case_when(
+      is.na(treat_vaccine_age_knowledge) ~ NA_real_,
       treat_vaccine_age_knowledge == "LESS THAN 12 MONTHS" ~ 1,
       treat_vaccine_age_knowledge == "1 YEAR" ~ 2, treat_vaccine_age_knowledge == "2 YEARS" ~ 3, 
       treat_vaccine_age_knowledge == "3 YEARS" ~ 4, treat_vaccine_age_knowledge == "4 YEARS" ~ 5, 
       treat_vaccine_age_knowledge == "5 YEARS" ~ 6, treat_vaccine_age_knowledge == "ABOVE 5 YEARS" ~ 7,
       str_detect(treat_vaccine_age_knowledge, "DON'T KNOW") ~ 98,
-      treat_vaccine_age_knowledge == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     # --- G. FEEDBACK ---
     across(c(feedback_free_treatment_6months, feedback_drug_stockout_6months), ~case_when(
+      is.na(.) ~ NA_real_,
       . == "YES" ~ 1,
       str_detect(., "NO AND I WENT") ~ 0,
       str_detect(., "DID NOT GO") ~ 6,
@@ -352,6 +369,7 @@ df_recoded <- df %>%
     )),
     
     feedback_gov_effort_rating = case_when(
+      is.na(feedback_gov_effort_rating) ~ NA_real_,
       str_detect(feedback_gov_effort_rating, "VERY EFFECTIVE") ~ 5,
       str_detect(feedback_gov_effort_rating, "SOMEWHAT EFFECTIVE") ~ 4,
       str_detect(feedback_gov_effort_rating, "NEUTRAL") ~ 3,
@@ -361,8 +379,8 @@ df_recoded <- df %>%
     ),
     
     # --- H. WOMEN'S TIMINGS ---
-    # Fix for women_child_first_advice_location
     women_child_first_advice_location = case_when(
+      is.na(women_child_first_advice_location) ~ NA_real_,
       str_detect(women_child_first_advice_location, "GOVERNMENT") ~ 1,
       str_detect(women_child_first_advice_location, "PRIVATE HOSPITAL") ~ 2,
       str_detect(women_child_first_advice_location, "NGO") ~ 3,
@@ -373,11 +391,11 @@ df_recoded <- df %>%
       str_detect(women_child_first_advice_location, "CHEMIST") ~ 8,
       str_detect(women_child_first_advice_location, "TRADITIONAL") ~ 10,
       str_detect(women_child_first_advice_location, "RELIGIOUS") ~ 11,
-      women_child_first_advice_location == "NO RESPONSE" ~ 99,
       TRUE ~ 99
     ),
     
     women_child_act_delay = case_when(
+      is.na(women_child_act_delay) ~ NA_real_,
       str_detect(women_child_act_delay, "SAME DAY") ~ 0,
       str_detect(women_child_act_delay, "NEXT DAY") ~ 1,
       str_detect(women_child_act_delay, "TWO DAYS") ~ 2,
@@ -387,6 +405,7 @@ df_recoded <- df %>%
     ),
     
     women_child_advice_delay_days = case_when(
+      is.na(women_child_advice_delay_days) ~ NA_real_,
       str_detect(women_child_advice_delay_days, "SAME DAY") ~ 0,
       str_detect(women_child_advice_delay_days, "1 DAY") ~ 1,
       str_detect(women_child_advice_delay_days, "2 DAYS") ~ 2,
@@ -394,8 +413,9 @@ df_recoded <- df %>%
       TRUE ~ 9
     ),
     
-    # --- I. BACKGROUND & ATTITUDES (SEMANTIC CONSISTENCY) ---
+    # --- I. BACKGROUND & ATTITUDES ---
     bg_tv_frequency = case_when(
+      is.na(bg_tv_frequency) ~ NA_real_,
       str_detect(bg_tv_frequency, "AT LEAST ONCE") ~ 1,
       str_detect(bg_tv_frequency, "WITHOUT WATCHNG") ~ 2,
       str_detect(bg_tv_frequency, "NOT AT ALL") ~ 3,
@@ -403,6 +423,7 @@ df_recoded <- df %>%
     ),
     
     bg_internet_frequency = case_when(
+      is.na(bg_internet_frequency) ~ NA_real_,
       str_detect(bg_internet_frequency, "EVERY DAY") ~ 1,
       str_detect(bg_internet_frequency, "ONCE A WEEK") ~ 2,
       str_detect(bg_internet_frequency, "WITHOUT USING") ~ 3,
@@ -410,25 +431,24 @@ df_recoded <- df %>%
     ),
     
     bg_religion = case_when(
+      is.na(bg_religion) ~ NA_real_,
       str_detect(bg_religion, "CATHOLIC") ~ 1,
       str_detect(bg_religion, "CHRISTIAN") ~ 2,
       str_detect(bg_religion, "ISLAM") ~ 3,
       str_detect(bg_religion, "TRADITIONAL") ~ 4,
-      str_detect(bg_religion, "OTHERS") ~ 96,
-      TRUE ~ 99
+      str_detect(bg_religion, "OTHERS") ~ 6,
+      TRUE ~ 9
     ),
     
-    # ATTITUDES (Likert Scale 1-5, No Lumping)
-    # DHS Standard Practice: Semantic Consistency
-    # 1=Strongly Agree, 2=Agree, 3=Neutral, 4=Disagree, 5=Strongly Disagree, 8=DK
     across(c(
       att_rainy_season_only, att_fever_worry_malaria, att_malaria_easily_treated,
       att_weak_children_die, att_net_use_mosquito_density, att_net_use_warm_weather,
       att_home_meds_first, att_full_dose_importance, att_seek_care_immediate,
       att_community_net_usage
     ), ~case_when(
+      is.na(.) ~ NA_real_,
       str_detect(., "STRONGLY AGREE") ~ 1,
-      str_detect(., "STRONGLY DISAGREE") ~ 5, # Check 'Strongly' before generic
+      str_detect(., "STRONGLY DISAGREE") ~ 5, 
       str_detect(., "AGREE") ~ 2,
       str_detect(., "NEUTRAL|NEITHER") ~ 3,
       str_detect(., "DISAGREE") ~ 4,
@@ -436,14 +456,12 @@ df_recoded <- df %>%
       TRUE ~ 9
     )),
     
-    # --- J. HOUSEHOLD METADATA (DHS 2021 CODES) ---
-    
-    # Water Source (PDF Page 5 - HH-5)
+    # --- J. HOUSEHOLD METADATA ---
     hh_drinking_water_source = case_when(
-      str_detect(hh_drinking_water_source, "PIPED INTO DWELLING") ~ 11, #TODO: Fix to include YARD below
-      str_detect(hh_drinking_water_source, "PIPED TO YARD") ~ 12, #TODO: Fix to Neighbour
-      str_detect(hh_drinking_water_source, "PIPED TO NEIGHBOR") ~ 13,
-      str_detect(hh_drinking_water_source, "PUBLIC TAP|STANDPIPE") ~ 14,
+      is.na(hh_drinking_water_source) ~ NA_real_,
+      str_detect(hh_drinking_water_source, "PIPED INTO DWELLING|YARD") ~ 11,
+      str_detect(hh_drinking_water_source, "PIPED TO NEIGHBOR") ~ 12,
+      str_detect(hh_drinking_water_source, "PUBLIC TAP|STANDPIPE") ~ 13,
       str_detect(hh_drinking_water_source, "TUBE|BOREHOLE") ~ 21,
       str_detect(hh_drinking_water_source, "PROTECTED WELL") ~ 31,
       str_detect(hh_drinking_water_source, "UNPROTECTED WELL|DUG WELL") ~ 32,
@@ -459,10 +477,10 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # Other Water (Same Codes)
     hh_other_water_source = case_when(
-      str_detect(hh_other_water_source, "PIPED INTO DWELLING") ~ 11,
-      str_detect(hh_other_water_source, "PIPED TO YARD") ~ 12,
+      is.na(hh_other_water_source) ~ NA_real_,
+      str_detect(hh_other_water_source, "PIPED INTO DWELLING|YARD") ~ 11,
+      str_detect(hh_other_water_source, "PIPED TO NEIGHBOR") ~ 12,
       str_detect(hh_other_water_source, "PUBLIC TAP|STANDPIPE") ~ 13,
       str_detect(hh_other_water_source, "TUBE|BOREHOLE") ~ 21,
       str_detect(hh_other_water_source, "PROTECTED WELL") ~ 31,
@@ -473,20 +491,22 @@ df_recoded <- df %>%
       str_detect(hh_other_water_source, "TANKER") ~ 61,
       str_detect(hh_other_water_source, "CART") ~ 71,
       str_detect(hh_other_water_source, "SURFACE") ~ 81,
+      str_detect(hh_other_water_source, "BOTTLED") ~ 91,
+      str_detect(hh_other_water_source, "SACHET") ~ 92,
       str_detect(hh_other_water_source, "OTHER") ~ 96,
       TRUE ~ 99
     ),
     
-    # Toilet Type (PDF Page 6 - HH-6)
     hh_toilet_type = case_when(
+      is.na(hh_toilet_type) ~ NA_real_,
       str_detect(hh_toilet_type, "FLUSH TO PIPED") ~ 11,
       str_detect(hh_toilet_type, "FLUSH TO SEPTIC") ~ 12,
       str_detect(hh_toilet_type, "FLUSH TO PIT") ~ 13,
       str_detect(hh_toilet_type, "FLUSH TO SOMEWHERE") ~ 14,
-      str_detect(hh_toilet_type, "FLUSH DON'T KNOW") ~ 15, # Generic flush unknown dest
+      str_detect(hh_toilet_type, "FLUSH DON'T KNOW") ~ 15, 
       str_detect(hh_toilet_type, "VENTILATED") ~ 21,
       str_detect(hh_toilet_type, "PIT LATRINE WITH SLAB") ~ 22,
-      str_detect(hh_toilet_type, "PIT LATRINE WITHOUT") ~ 23, # No slab or open
+      str_detect(hh_toilet_type, "PIT LATRINE WITHOUT") ~ 23, 
       str_detect(hh_toilet_type, "COMPOSTING") ~ 31,
       str_detect(hh_toilet_type, "BUCKET") ~ 41,
       str_detect(hh_toilet_type, "HANGING") ~ 51,
@@ -495,8 +515,8 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # Cookstove Fuel (PDF Page 6 - HH-6)
     hh_cookstove_fuel = case_when(
+      is.na(hh_cookstove_fuel) ~ NA_real_,
       str_detect(hh_cookstove_fuel, "ALCOHOL") ~ 01,
       str_detect(hh_cookstove_fuel, "GASOLINE") ~ 02,
       str_detect(hh_cookstove_fuel, "KEROSENE") ~ 03,
@@ -513,16 +533,16 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # Cookstove Type (Standardized DHS Categories)
     hh_cookstove_type = case_when(
+      is.na(hh_cookstove_type) ~ NA_real_,
       str_detect(hh_cookstove_type, "ELECTRIC") ~ 1,
       str_detect(hh_cookstove_type, "SOLAR") ~ 2,
       str_detect(hh_cookstove_type, "COOKING GAS|LPG") ~ 3,
       str_detect(hh_cookstove_type, "PIPED NATURAL GAS") ~ 4,
       str_detect(hh_cookstove_type, "BIOGAS") ~ 5,
       str_detect(hh_cookstove_type, "KEROSENE") ~ 6,
-      str_detect(hh_cookstove_type, "MANUFACTURED|IMPROVED") ~ 7, # Improved solid fuel stove
-      str_detect(hh_cookstove_type, "TRADITIONAL|ANIMAL DUNG") ~ 8,      # Traditional solid fuel stove
+      str_detect(hh_cookstove_type, "MANUFACTURED|IMPROVED") ~ 7, 
+      str_detect(hh_cookstove_type, "TRADITIONAL|ANIMAL DUNG") ~ 8,      
       str_detect(hh_cookstove_type, "OPEN FIRE|THREE STONE|WOOD") ~ 9,
       str_detect(hh_cookstove_type, "NO FOOD") ~ 95,
       str_detect(hh_cookstove_type, "OTHER") ~ 96,
@@ -530,6 +550,7 @@ df_recoded <- df %>%
     ),
     
     hh_relation_to_head = case_when(
+      is.na(hh_relation_to_head) ~ NA_real_,
       str_detect(hh_relation_to_head, "HEAD") ~ 1,
       str_detect(hh_relation_to_head, "WIFE|HUSBAND") ~ 2,
       str_detect(hh_relation_to_head, "SON|DAUGHTER|CHILD") ~ 3,
@@ -545,16 +566,16 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # Locations
     across(c(hh_water_location, hh_toilet_location), ~case_when(
+      is.na(.) ~ NA_real_,
       str_detect(., "OWN DWELLING") ~ 1,
       str_detect(., "OWN YARD") ~ 2,
       str_detect(., "ELSEWHERE") ~ 3,
       TRUE ~ 9
     )),
     
-    # Materials
     hh_floor_material = case_when(
+      is.na(hh_floor_material) ~ NA_real_,
       str_detect(hh_floor_material, "EARTH|SAND") ~ 11,
       str_detect(hh_floor_material, "DUNG") ~ 12,
       str_detect(hh_floor_material, "WOOD PLANKS") ~ 21,
@@ -565,19 +586,18 @@ df_recoded <- df %>%
       str_detect(hh_floor_material, "CEMENT") ~ 34,
       str_detect(hh_floor_material, "CARPET") ~ 35,
       str_detect(hh_floor_material, "OTHER") ~ 96,
-      TRUE~99
+      TRUE ~ 99
     ),
     
-    
-    # Wall Material 
     hh_wall_material = case_when(
+      is.na(hh_wall_material) ~ NA_real_,
       str_detect(hh_wall_material, "CANE|PALM|TRUNKS") ~ 11,
-      str_detect(hh_wall_material, "MUD|DIRT") ~ 12, # No cement
+      str_detect(hh_wall_material, "MUD|DIRT") ~ 12, 
       str_detect(hh_wall_material, "BAMBOO WITH MUD") ~ 21,
       str_detect(hh_wall_material, "STONE WITH MUD") ~ 22,
       str_detect(hh_wall_material, "PLYWOOD") ~ 23,
       str_detect(hh_wall_material, "CARDBOARD") ~ 24,
-      str_detect(hh_wall_material, "CEMENT") ~ 31, # Cement blocks
+      str_detect(hh_wall_material, "CEMENT") ~ 31, 
       str_detect(hh_wall_material, "STONE WITH LIME") ~ 32,
       str_detect(hh_wall_material, "BRICKS") ~ 33,
       str_detect(hh_wall_material, "COVERED ADOBE") ~ 34,
@@ -585,8 +605,8 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # Roof Material 
     hh_roof_material = case_when(
+      is.na(hh_roof_material) ~ NA_real_,
       str_detect(hh_roof_material, "THATCH|PALM|LEAF") ~ 11,
       str_detect(hh_roof_material, "MUD") ~ 12,
       str_detect(hh_roof_material, "SOD") ~ 13,
@@ -603,9 +623,7 @@ df_recoded <- df %>%
       TRUE ~ 99
     ),
     
-    # --- K. NUMERIC PARSING (COUNTS & AGES) ---
-    
-    # Convert text like "7 OR MORE", "NO RESPONSE", "DON'T KNOW" into numbers
+    # --- K. NUMERIC PARSING ---
     across(c(
       demo_hh_children_under5, demo_hh_sleeping_rooms,
       prev_num_mosquito_nets, prev_num_people_slept_net, prev_months_since_net_obtained,
@@ -616,15 +634,14 @@ df_recoded <- df %>%
       hh_num_cows_bulls, hh_num_other_cattle, hh_num_horses_donkeys, hh_num_goats,
       hh_num_sheep, hh_num_poultry, hh_num_pigs, hh_num_camels, hh_num_agri_plots
     ), ~case_when(
-      . == "NO RESPONSE" ~ 99,
+      is.na(.) ~ NA_real_,
       str_detect(., "DON'T KNOW|NOT SURE") ~ 98,
       str_detect(., "LESS THAN") ~ 0,
-      str_detect(., "OR MORE") ~ as.numeric(str_extract(., "\\d+")), # e.g. "7 or more" -> 7
-      str_detect(., "MORE THAN") ~ as.numeric(str_extract(., "\\d+")) + 1, # e.g. "More than 7" -> 8
-      TRUE ~ as.numeric(str_extract(., "\\d+")) # Extract digits
+      str_detect(., "OR MORE") ~ as.numeric(str_extract(., "\\d+")),
+      str_detect(., "MORE THAN") ~ as.numeric(str_extract(., "\\d+")) + 1,
+      TRUE ~ as.numeric(str_extract(., "\\d+"))
     ))
   )
-
 
 # ==============================================================================
 # 5. LABELLING (APPLYING METADATA FOR SPSS)
@@ -633,177 +650,139 @@ df_recoded <- df %>%
 # ------------------------------------------------------------------------------
 # A. DEFINE VALUE LABEL MAPPINGS
 # ------------------------------------------------------------------------------
-# These map the numeric codes generated in Step 3 back to text definitions.
 
-# Common Scales
-val_lbl_yesno   <- c("No" = 0, "Yes" = 1, "Not Eligible" = 6, "Don't Know" = 8, "Missing" = 9)
-val_lbl_gender  <- c("Male" = 1, "Female" = 2, "Missing" = 9)
-val_lbl_edu     <- c("None/Never" = 0, "Primary" = 1, "Secondary" = 2, "Higher" = 3, "Missing" = 9)
+# Common SCALES
+val_lbl_yesno   <- c("No" = 0, "Yes" = 1, "Don't Know" = 8, "Other/Missing" = 9)
+val_lbl_gender  <- c("Male" = 1, "Female" = 2, "Other/Missing" = 9)
+val_lbl_edu     <- c("No education" = 0, "Primary" = 1, "Secondary" = 2, "Higher" = 3, "Other/Missing" = 9)
 
 val_lbl_likert <- c(
-  "Strongly Agree" = 1,
-  "Agree" = 2,
-  "Neutral" = 3,
-  "Disagree" = 4,
-  "Strongly Disagree" = 5,
-  "Don't Know" = 8,
-  "Missing" = 9
+  "Strongly Agree" = 1, "Agree" = 2, "Neutral" = 3, 
+  "Disagree" = 4, "Strongly Disagree" = 5, "Don't Know" = 8, "Other/Missing" = 9
 )
 
-val_lbl_loc     <- c("Public/Govt" = 1, "Private/NGO" = 2, "Pharmacy/Chemist" = 3, "Other/Traditional" = 4, "Missing" = 9)
+val_lbl_loc <- c(
+  "Government" = 1, "Private Hospital" = 2, "NGO hospital" = 3, "Mobile Clinic" = 4,
+  "Private Doctor" = 5, "Community Health Worker" = 6, "Pharmacy" = 7, 
+  "Chemist" = 8, "Traditional Practitioner" = 10, "Religious Institution" = 11, "Other/Missing" = 99
+)
 
-# Financial & Time (Fixed to include all 17 Categories)
+# Financial & Time
 val_lbl_cost <- c(
-  "Free" = 0, 
-  "N1 - N999" = 1, 
-  "N1,000 - N1,999" = 2, 
-  "N2,000 - N2,999" = 3, 
-  "N3,000 - N3,999" = 4, 
-  "N4,000 - N4,999" = 5, 
-  "N5,000 - N5,999" = 6, 
-  "N6,000 - N6,999" = 7, 
-  "N7,000 - N7,999" = 8, 
-  "N8,000 - N8,999" = 9, 
-  "N9,000 - N9,999" = 10, 
-  "N10,000 - N10,999" = 11, 
-  "N11,000 - N11,999" = 12, 
-  "N12,000 - N12,999" = 13, 
-  "N13,000 - N13,999" = 14, 
-  "N14,000 - N14,999" = 15, 
-  "Above N15,000" = 16, 
-  "Don't Know" = 98, 
-  "Missing" = 99
+  "Free" = 0, "N1 - N999" = 1, "N1,000 - N1,999" = 2, "N2,000 - N2,999" = 3,
+  "N3,000 - N3,999" = 4, "N4,000 - N4,999" = 5, "N5,000 - N5,999" = 6,
+  "N6,000 - N6,999" = 7, "N7,000 - N7,999" = 8, "N8,000 - N8,999" = 9,
+  "N9,000 - N9,999" = 10, "N10,000 - N10,999" = 11, "N11,000 - N11,999" = 12,
+  "N12,000 - N12,999" = 13, "N13,000 - N13,999" = 14, "N14,000 - N14,999" = 15,
+  "Above N15,000" = 16, "Don't Know" = 98, "Other/Missing" = 99
 )
-val_lbl_time    <- c("< 30 Mins" = 1, "30-60 Mins" = 2, "> 1 Hour" = 3, "Don't Know" = 8, "Missing" = 9)
-val_lbl_purch   <- c("Weeks ago" = 1, "Months ago" = 2, "> 1 Year ago" = 3, "Missing" = 9)
-val_lbl_afford  <- c("Very/Somewhat Affordable" = 1, "Somewhat Affordable" = 2, "Neutral" = 3, "Expensive" = 4, "Don't Know" = 8, "Missing" = 9)
 
-# Household Characteristics (Expanded to DHS Codes)
+val_lbl_time    <- c("Less than 30 mins" = 1, "30 mins" = 2, "More than 30 mins" = 3, "Don't Know" = 8, "Other/Missing" = 9)
+val_lbl_purch   <- c("0-4 Weeks ago" = 1, "1-5 Months ago" = 2, "6-12 Months ago" = 3, "Over one year ago" = 4, "Don't Know" = 8, "Other/Missing" = 9)
+val_lbl_afford  <- c("Very Affordable" = 1, "Somewhat Affordable" = 2, "Neutral" = 3, "Somewhat Expensive" = 4, "Very Expensive" = 5, "Don't Know" = 8, "Other/Missing" = 9)
+
+# Household Characteristics
 val_lbl_water <- c(
-  "Piped to Dwelling" = 11, "Piped to Yard" = 12, "Public Tap" = 13,
-  "Tube Well/Borehole" = 21, 
-  "Protected Well" = 31, "Unprotected Well" = 32,
-  "Protected Spring" = 41, "Unprotected Spring" = 42,
-  "Rainwater" = 51,
-  "Tanker Truck" = 61, "Cart with Tank" = 71,
-  "Surface Water" = 81,
-  "Bottled Water" = 91, "Sachet Water" = 92,
-  "Other" = 96, "Missing" = 99
+  "Piped into Dwelling/Yard/Plot" = 11, "Piped to Neighbour" = 12, "Public Tap/Standpipe" = 13,
+  "Tube Well or Borehole" = 21, "Protected Well" = 31, "Unprotected Well" = 32,
+  "Protected Spring" = 41, "Unprotected Spring" = 42, "Rainwater" = 51,
+  "Tanker Truck" = 61, "Cart with Small Tank" = 71, "Surface Water" = 81,
+  "Bottled Water" = 91, "Sachet Water" = 92, "Other" = 96, "Other/Missing" = 99
 )
 
 val_lbl_toilet <- c(
-  "Flush to Piped" = 11, "Flush to Septic" = 12, "Flush to Pit" = 13, "Flush Elsewhere" = 14, "Flush DK" = 15,
-  "VIP Latrine" = 21, "Pit Latrine with Slab" = 22, "Pit Latrine no Slab" = 23,
-  "Composting" = 31,
-  "Bucket" = 41,
-  "Hanging" = 51,
-  "No Facility/Bush" = 61,
-  "Other" = 96, "Missing" = 99
+  "Flush to Piped Sewer" = 11, "Flush to Septic Tank" = 12, "Flush to Pit Latrine" = 13, 
+  "Flush to Somewhere Else" = 14, "Flush Don't Know" = 15, "VIP Latrine" = 21, 
+  "Pit Latrine with Slab" = 22, "Pit Latrine without Slab/Open Pit" = 23, 
+  "Composting Toilet" = 31, "Bucket Toilet" = 41, "Hanging Toilet/Latrine" = 51,
+  "No Facility/Bush/Field" = 61, "Other" = 96, "Other/Missing" = 99
+)
+
+val_lbl_facility_loc <- c(
+  "In own dwelling" = 1, "In own yard/plot" = 2, "Elsewhere" = 3, "Missing" = 9
 )
 
 val_lbl_fuel <- c(
-  "Alcohol" = 01, "Gasoline" = 02, "Kerosene" = 03, "Coal" = 04,
-  "Charcoal" = 05, "Wood" = 06, "Straw/Shrubs" = 07, "Agri Crop" = 08,
-  "Dung" = 09, "Biomass" = 10, "Garbage" = 11, "Sawdust" = 12,
-  "Other" = 96, "Missing" = 99
+  "Alcohol" = 01, "Gasoline" = 02, "Kerosene" = 03, "Coal/Lignite" = 04,
+  "Charcoal" = 05, "Wood" = 06, "Straw/Shrubs/Grass" = 07, "Agri Crop" = 08,
+  "Animal Dung" = 09, "Biomass" = 10, "Garbage" = 11, "Sawdust" = 12,
+  "Other" = 96, "Other/Missing" = 99
 )
-
-val_lbl_loc_hh  <- c("Own Dwelling" = 1, "Own Yard" = 2, "Elsewhere" = 3, "Missing" = 9)
-
-# Materials (Expanded)
-val_lbl_mat_flr <- c(
-  "Earth/Sand" = 11, "Dung" = 12,
-  "Wood Planks" = 21, "Palm/Bamboo" = 22,
-  "Parquet" = 31, "Vinyl/Asphalt" = 32, "Ceramic Tiles" = 33, "Cement" = 34, "Carpet" = 35,
-  "Other" = 96, "Missing" = 99
-)
-
-# --- Wall Materials (PDF Page 10 - HH-11) ---
-val_lbl_mat_wall <- c(
-  "Cane/Palm/Trunks" = 11, 
-  "Mud/Dirt" = 12,
-  "Bamboo with Mud" = 21, 
-  "Stone with Mud" = 22, 
-  "Plywood" = 23, 
-  "Cardboard" = 24,
-  "Cement/Cement Blocks" = 31, 
-  "Stone with Lime/Cement" = 32, 
-  "Bricks" = 33, 
-  "Covered Adobe" = 34,
-  "Other" = 96, 
-  "Missing" = 99
-)
-
-# --- Roof Materials (PDF Page 10 - HH-12) ---
-val_lbl_mat_roof <- c(
-  "Thatch/Palm/Leaf" = 11, 
-  "Mud" = 12, 
-  "Sod" = 13,
-  "Rustic Mat" = 21, 
-  "Palm/Bamboo" = 22, 
-  "Wood Planks" = 23,
-  "Metal/Zinc" = 31, 
-  "Wood" = 32, 
-  "Calamine/Cement Fiber" = 33, 
-  "Ceramic Tiles" = 34, 
-  "Cement" = 35, 
-  "Shingles" = 36,
-  "Other" = 96, 
-  "Missing" = 99
-)
-
-# --- Missing Definitions for Step 5A ---
 
 val_lbl_stove_type <- c(
-  "Electric" = 1, "Solar" = 2, "LPG/Natural Gas" = 3, "Biogas" = 4, 
-  "Kerosene" = 5, "Manufactured/Improved Solid Fuel" = 6, 
-  "Traditional Solid Fuel" = 7, "Open Fire" = 8, 
-  "No Food Cooked" = 95, "Other" = 96, "Missing" = 99
+  "Electric" = 1, "Solar" = 2, "LPG/Natural Gas" = 3, "Piped Natural Gas" = 4,
+  "Biogas" = 5, "Kerosene" = 6, "Manufactured/Improved Solid Fuel" = 7, 
+  "Traditional/Animal Dung" = 8, "Open Fire/Three Stone" = 9,
+  "No Food Cooked" = 95, "Other" = 96, "Other/Missing" = 99
 )
 
-val_lbl_net_how <- c(
-  "Mass Campaign" = 1, "Antenatal (ANC)" = 2, "Immunization" = 3, 
-  "Other" = 96, "Missing" = 99
+val_lbl_mat_flr <- c(
+  "Earth/Sand" = 11, "Dung" = 12, "Wood Planks" = 21, "Palm/Bamboo" = 22,
+  "Parquet/Polished Wood" = 31, "Vinyl/Asphalt" = 32, "Ceramic Tiles" = 33, 
+  "Cement" = 34, "Carpet" = 35, "Other" = 96, "Other/Missing" = 99
 )
 
+val_lbl_mat_wall <- c(
+  "Cane/Palm/Trunks" = 11, "Mud/Dirt" = 12, "Bamboo with Mud" = 21, 
+  "Stone with Mud" = 22, "Plywood" = 23, "Cardboard" = 24, "Cement" = 31, 
+  "Stone with Lime" = 32, "Bricks" = 33, "Covered Adobe" = 34, "Other" = 96, "Other/Missing" = 99
+)
+
+val_lbl_mat_roof <- c(
+  "Thatch/Palm/Leaf" = 11, "Mud" = 12, "Sod" = 13, "Rustic Mat" = 21, 
+  "Palm/Bamboo" = 22, "Wood Planks" = 23, "Metal/Zinc" = 31, "Wood" = 32, 
+  "Calamine/Cement Fiber" = 33, "Ceramic Tiles" = 34, "Cement" = 35, 
+  "Shingles" = 36, "Other" = 96, "Other/Missing" = 99
+)
+
+# Net Brands & Acquisition
+val_lbl_brands <- c(
+  "LLIN" = 10, "Olyset LLIN" = 11, "Iconlife LLIN" = 12, "Duranet LLIN" = 13,
+  "Netprotect LLIN" = 14, "BASF Interceptor LLIN" = 15, "Yorkool LLIN" = 16,
+  "Magnet LLIN" = 17, "Dawaplus 2.0 LLIN" = 18, "Royal Security LLIN" = 19,
+  "Royal Sentry LLIN" = 20, "PermaNet 2.0 LLIN" = 21, "PermaNet 3.0 LLIN" = 22,
+  "Veeralin LLIN" = 23, "Interceptor G2 LLIN" = 24, "Royal Guard LLIN" = 25,
+  "Other LLIN/DK Brand" = 26, "Other (Not LLIN)" = 95, "Other" = 96, 
+  "Don't Know" = 98, "Other/Missing" = 99
+)
+
+val_lbl_net_how <- c("Mass Campaign" = 1, "ANC" = 2, "Immunisation" = 3, "Other" = 96, "Other/Missing" = 99)
 val_lbl_net_where <- c(
-  "Government" = 1, "Private Sector" = 2, "Pharmacy" = 3, 
-  "Shop/Market" = 4, "Comm Health Worker" = 5, "Religious Inst" = 6, 
-  "School" = 7, "Other" = 96, "Don't Know" = 98, "Missing" = 99
+  "Government" = 1, "Private Sector" = 2, "Pharmacy" = 3, "Shop/Market" = 4,
+  "CHW" = 5, "Religious Inst" = 6, "School" = 7, "Other" = 96, "Don't Know" = 98, "Other/Missing" = 99
 )
 
+# SMC & Vaccine
 val_lbl_smc_drug <- c(
-  "SP + AQ" = 1, "SP Only" = 2, "AL (Coartem)" = 3, 
-  "AS + AQ" = 4, "DHA-PPQ" = 5, "Proguanil" = 6, 
-  "Other" = 96, "Don't Know" = 98, "Missing" = 99
+  "SP + AQ" = 1, "SP Only" = 2, "AL (Coartem)" = 3, "AS + AQ" = 4, 
+  "DHA-PPQ" = 5, "Proguanil" = 6, "Other" = 96, "Don't Know" = 98, "Other/Missing" = 99
+)
+
+val_lbl_vaccine_age <- c(
+  "Less than 12 months" = 1, "1 year" = 2, "2 years" = 3, "3 years" = 4, 
+  "4 years" = 5, "5 years" = 6, "Above 5 years" = 7, "Don't Know" = 98, "Other/Missing" = 99
 )
 
 val_lbl_relation <- c(
-  "Head" = 1, "Wife/Husband" = 2, "Son/Daughter" = 3, 
-  "Son/Daughter-in-law" = 4, "Grandchild" = 5, "Parent" = 6, 
-  "Parent-in-law" = 7, "Brother/Sister" = 8, "Other Relative" = 9, 
-  "Adopted/Foster" = 10, "Not Related" = 11, "Missing" = 98
+  "Head" = 1, "Wife/Husband" = 2, "Son/Daughter" = 3, "Son-in-law" = 4,
+  "Grandchild" = 5, "Parent" = 6, "Parent-in-law" = 7, "Brother/Sister" = 8,
+  "Other Relative" = 9, "Adopted" = 10, "Not Related" = 11, "Don't Know" = 98, "Other/Missing" = 99
 )
 
-# Specific Topics
-val_lbl_brands  <- c("PermaNet" = 1, "Olyset" = 2, "DuraNet" = 3, "Royal" = 4, "Interceptor" = 5, "Other (Not LLIN)" = 95, "Other" = 96, "Don't Know" = 98, "Missing" = 99)
-val_lbl_rating  <- c("Very Effective" = 5, "Somewhat Effective" = 4, "Neutral" = 3, "Somewhat Ineffective" = 2, "Very Ineffective" = 1, "Missing" = 9)
-val_lbl_freq    <- c("Daily/Often" = 1, "Weekly/Rarely" = 2, "Never" = 3, "Missing" = 9)
-val_lbl_relig   <- c("Catholic" = 1, "Christian" = 2, "Islam" = 3, "Traditional" = 4, "Other" = 96)
-val_lbl_delays  <- c("Same Day" = 0, "Next Day/1 Day" = 1, "2 Days" = 2, "3+ Days" = 3, "Don't Know" = 8, "Missing" = 9)
-val_lbl_smc     <- c("Yes" = 1, "No (Eligible)" = 0, "N/A (No Child)" = 6, "Missing" = 9)
-val_lbl_vaccine <- c("Months" = 1, "Years" = 2, "Don't Know" = 98, "Missing" = 99)
+val_lbl_smc_elig <- c("Yes" = 1, "No (Has Child)" = 0, "No (No Child)" = 6, "Other/Missing" = 9)
+val_lbl_rating   <- c("Very Effective" = 5, "Somewhat Effective" = 4, "Neutral" = 3, "Somewhat Ineffective" = 2, "Very Ineffective" = 1, "Other/Missing" = 9)
+val_lbl_freq     <- c("Daily/Often" = 1, "Weekly/Rarely" = 2, "Never" = 3, "Other/Missing" = 9)
+val_lbl_relig    <- c("Catholic" = 1, "Christian" = 2, "Islam" = 3, "Traditional" = 4, "Other" = 6, "Other/Missing" = 9)
+val_lbl_delays   <- c("Same Day" = 0, "Next Day" = 1, "2 Days" = 2, "3+ Days" = 3, "Don't Know" = 8, "Other/Missing" = 9)
 
 # ------------------------------------------------------------------------------
 # B. APPLY VALUE LABELS TO COLUMNS
 # ------------------------------------------------------------------------------
+
 survey_labelled <- df_recoded %>%
   set_value_labels(
-    # Demographics
     demo_gender = val_lbl_gender,
     demo_edu_level = val_lbl_edu,
-    
-    # Prevention & Treatment
     prev_first_treatment_location = val_lbl_loc,
     prev_net_brand = val_lbl_brands,
     prev_net_obtained_how = val_lbl_net_how,
@@ -815,39 +794,30 @@ survey_labelled <- df_recoded %>%
     treat_drug_cost = val_lbl_cost,
     treat_drug_purchase_time = val_lbl_purch,
     treat_drug_affordability = val_lbl_afford,
-    
-    # Complex SMC/Feedback Logic
-    treat_children_received_smc = val_lbl_smc,
-    treat_children_received_vaccine = val_lbl_smc,
-    feedback_free_treatment_6months = val_lbl_smc, # Reuse label as logic is similar (0=No, 6=NA)
-    feedback_drug_stockout_6months = val_lbl_smc,
+    treat_children_received_smc = val_lbl_smc_elig,
+    treat_children_received_vaccine = val_lbl_smc_elig,
+    feedback_free_treatment_6months = val_lbl_smc_elig,
+    feedback_drug_stockout_6months = val_lbl_smc_elig,
     feedback_gov_effort_rating = val_lbl_rating,
-    treat_vaccine_age_knowledge = val_lbl_vaccine,
-    
-    # Women
+    treat_vaccine_age_knowledge = val_lbl_vaccine_age,
     women_child_first_advice_location = val_lbl_loc,
     women_child_act_delay = val_lbl_delays,
     women_child_advice_delay_days = val_lbl_delays,
-    
-    # Background
     bg_tv_frequency = val_lbl_freq,
     bg_internet_frequency = val_lbl_freq,
     bg_religion = val_lbl_relig,
-    
-    # Household
     hh_drinking_water_source = val_lbl_water,
     hh_other_water_source = val_lbl_water,
     hh_toilet_type = val_lbl_toilet,
     hh_cookstove_fuel = val_lbl_fuel,
-    hh_water_location = val_lbl_loc_hh,
-    hh_toilet_location = val_lbl_loc_hh,
-    hh_floor_material = val_lbl_mat_flr,
-    hh_relation_to_head = val_lbl_relation,
     hh_cookstove_type = val_lbl_stove_type,
+    hh_relation_to_head = val_lbl_relation,
+    hh_water_location = val_lbl_facility_loc,
+    hh_toilet_location = val_lbl_facility_loc,
+    hh_floor_material = val_lbl_mat_flr,
     hh_wall_material = val_lbl_mat_wall,
     hh_roof_material = val_lbl_mat_roof
   ) %>%
-  # Apply Yes/No labels to multiple binary variables
   mutate(across(
     c(
       prev_has_mosquito_nets, prev_home_sprayed_interior, treat_hh_fever_last_2weeks, 
@@ -857,21 +827,10 @@ survey_labelled <- df_recoded %>%
       women_child_took_medicine, women_child_act_effective, women_currently_pregnant,
       bg_own_smartphone, bg_internet_ever_used, bg_heard_malaria_msg_6months, 
       bg_aware_avoidance, hh_toilet_shared, hh_owns_livestock, hh_owns_agri_land,
-      hh_has_electricity, hh_has_radio, hh_has_tv, hh_has_non_mobile_phone,
-      hh_has_computer, hh_has_refrigerator, hh_has_table, hh_has_chair,
-      hh_has_bed, hh_has_sofa, hh_has_cupboard, hh_has_ac, hh_has_electric_iron,
-      hh_has_generator, hh_has_fan, hh_own_watch, hh_own_mobile_phone,
-      hh_own_bicycle, hh_own_motorcycle, hh_own_animal_cart, hh_own_car_truck,
-      hh_own_motor_boat, hh_own_canoe, hh_own_keke_napep, hh_has_bank_account,
-      hh_mobile_money_usage,
-      # Dummies by prefix
-      starts_with("edu_inf_"), starts_with("repel_"), starts_with("anc_prov_"),
-      starts_with("anc_loc_"), starts_with("sp_src_"), starts_with("child_adv_"),
-      starts_with("med_"), starts_with("msg_"), starts_with("know_")
+      starts_with("hh_has_"), starts_with("hh_own_")
     ),
     ~ set_value_labels(.x, val_lbl_yesno)
   )) %>%
-  # Apply Agree/Disagree labels to attitude variables
   mutate(across(
     c(
       att_rainy_season_only, att_fever_worry_malaria, att_malaria_easily_treated,
@@ -1001,19 +960,95 @@ var_label(survey_labelled$hh_floor_material) <- "Main Floor Material"
 var_label(survey_labelled$hh_roof_material) <- "Main Roof Material"
 var_label(survey_labelled$hh_wall_material) <- "Main Wall Material"
 
-# Labels for Dummies
-var_label(survey_labelled$edu_inf_none) <- "Informal Edu: None"
-var_label(survey_labelled$edu_inf_quranic) <- "Informal Edu: Quranic"
-var_label(survey_labelled$repel_coils) <- "Repellent: Coils"
-var_label(survey_labelled$repel_spray) <- "Repellent: Sprays"
-var_label(survey_labelled$anc_prov_doc) <- "ANC Provider: Doctor"
-var_label(survey_labelled$anc_prov_nurse) <- "ANC Provider: Nurse/Midwife"
-var_label(survey_labelled$sp_src_anc) <- "SP Source: ANC Visit"
-var_label(survey_labelled$msg_radio) <- "Msg Source: Radio"
-var_label(survey_labelled$msg_tv) <- "Msg Source: TV"
-var_label(survey_labelled$know_net) <- "Knowledge: Sleep in Net"
-var_label(survey_labelled$know_clean) <- "Knowledge: Clean Surroundings"
+# Labelling Dummy Variables
 
+# --- 1. Informal Education Dummies ---
+var_label(survey_labelled$edu_inf_none)           <- "Informal education: None"
+var_label(survey_labelled$edu_inf_adult)          <- "Informal education: Adult literacy"
+var_label(survey_labelled$edu_inf_tsangaya)       <- "Informal education: Tsangaya"
+var_label(survey_labelled$edu_inf_quranic)        <- "Informal education: Quranic"
+var_label(survey_labelled$edu_inf_other)          <- "Informal education: Other"
+
+# --- 2. Repellent Methods ---
+var_label(survey_labelled$repel_coils)            <- "Prevention: Use mosquito coils"
+var_label(survey_labelled$repel_spray)            <- "Prevention: Use insecticide sprays"
+var_label(survey_labelled$repel_cream)            <- "Prevention: Use repellent creams"
+var_label(survey_labelled$repel_electric)         <- "Prevention: Use electronic mosquito destroyers"
+var_label(survey_labelled$repel_none)             <- "Prevention: No repellent methods used"
+
+# --- 3. ANC Provider ---
+var_label(survey_labelled$anc_prov_doc)           <- "ANC Provider: Doctor"
+var_label(survey_labelled$anc_prov_nurse)         <- "ANC Provider: Nurse/Midwife"
+var_label(survey_labelled$anc_prov_aux)           <- "ANC Provider: Auxiliary Nurse/Midwife"
+var_label(survey_labelled$anc_prov_chew)          <- "ANC Provider: Community Extension Worker (CHEW)"
+var_label(survey_labelled$anc_prov_tba)           <- "ANC Provider: Traditional Birth Attendant"
+var_label(survey_labelled$anc_prov_field)         <- "ANC Provider: Community Health Field Worker"
+var_label(survey_labelled$anc_prov_other)         <- "ANC Provider: Other"
+
+# --- 4. ANC Location ---
+var_label(survey_labelled$anc_loc_govhos)            <- "ANC Location: Government hospital"
+var_label(survey_labelled$anc_loc_govcen)            <- "ANC Location: Government health center"
+var_label(survey_labelled$anc_loc_govpost)            <- "ANC Location: Government health post"
+var_label(survey_labelled$anc_loc_pvt)            <- "ANC Location: Private facility"
+var_label(survey_labelled$anc_loc_ngohos)            <- "ANC Location: NGO hospital"
+var_label(survey_labelled$anc_loc_ngoclin)            <- "ANC Location: NGO clinic"
+var_label(survey_labelled$anc_loc_herhome)           <- "ANC Location: Her home"
+var_label(survey_labelled$anc_loc_yourhome)            <- "ANC Location: Your home"
+var_label(survey_labelled$anc_loc_other)            <- "ANC Location: Others"
+
+# --- 5. SP/Fansidar Source ---
+var_label(survey_labelled$sp_src_anc)             <- "Source of SP/Fansidar: Antenatal visit"
+var_label(survey_labelled$sp_src_nonanc)           <- "Source of SP/Fansidar: Another facility (non-antenatal)"
+var_label(survey_labelled$sp_src_pharm)           <- "Source of SP/Fansidar: Pharmacy/Chemist"
+var_label(survey_labelled$sp_src_chew)            <- "Source of SP/Fansidar: Community health worker"
+var_label(survey_labelled$sp_src_other)            <- "Source of SP/Fansidar: Others"
+
+# --- 6. Child Treatment Advice Location ---
+var_label(survey_labelled$child_adv_gov)          <- "Advice Source: Government facility"
+var_label(survey_labelled$child_adv_pvth)         <- "Advice Source: Private hospital"
+var_label(survey_labelled$child_adv_ngo)          <- "Advice Source: NGO facility"
+var_label(survey_labelled$child_adv_mob)          <- "Advice Source: Mobile clinic"
+var_label(survey_labelled$child_adv_pvtd)         <- "Advice Source: Private doctor"
+var_label(survey_labelled$child_adv_com)          <- "Advice Source: Community health worker"
+var_label(survey_labelled$child_adv_pharm)        <- "Advice Source: Pharmacy"
+var_label(survey_labelled$child_adv_chem)         <- "Advice Source: Chemist"
+var_label(survey_labelled$child_adv_trad)         <- "Advice Source: Traditional practitioner"
+var_label(survey_labelled$child_adv_rel)          <- "Advice Source: Religious institution"
+
+# --- 7. Child Medicine Type ---
+var_label(survey_labelled$med_act)                <- "Medicine: Artemisinin-based Combination Therapy (ACT)"
+var_label(survey_labelled$med_sp)                 <- "Medicine: SP/Fansidar"
+var_label(survey_labelled$med_chloro)             <- "Medicine: Chloroquine"
+var_label(survey_labelled$med_amod)               <- "Medicine: Amodiaquine"
+var_label(survey_labelled$med_artesun)            <- "Medicine: Artesunate"
+var_label(survey_labelled$med_quinine)            <- "Medicine: Quinine"
+var_label(survey_labelled$med_inject)             <- "Medicine: Injection"
+var_label(survey_labelled$med_other)              <- "Medicine: Other medicine"
+
+# --- 8. Malaria Message Source ---
+var_label(survey_labelled$msg_radio)              <- "Malaria Message Source: Radio"
+var_label(survey_labelled$msg_tv)                 <- "Malaria Message Source: Television"
+var_label(survey_labelled$msg_poster)             <- "Malaria Message Source: Poster/Billboard"
+var_label(survey_labelled$msg_news)               <- "Malaria Message Source: Newspaper"
+var_label(survey_labelled$msg_leaf)               <- "Malaria Message Source: Leaflet"
+var_label(survey_labelled$msg_hcp)                <- "Malaria Message Source: Healthcare provider"
+var_label(survey_labelled$msg_chw)                <- "Malaria Message Source: Community health worker"
+var_label(survey_labelled$msg_social)             <- "Malaria Message Source: Social media"
+var_label(survey_labelled$msg_town)               <- "Malaria Message Source: Town announcer"
+var_label(survey_labelled$msg_ipc)                <- "Malaria Message Source: Inter-personal communication"
+var_label(survey_labelled$msg_family)             <- "Malaria Message Source: Family/Friends"
+
+# --- 9. Prevention Knowledge ---
+var_label(survey_labelled$know_net)               <- "Knowledge: Sleep inside a mosquito net"
+var_label(survey_labelled$know_itn)               <- "Knowledge: Use insecticide-treated net (ITN)"
+var_label(survey_labelled$know_repel)             <- "Knowledge: Use mosquito repellent"
+var_label(survey_labelled$know_stag)              <- "Knowledge: Clear stagnant water"
+var_label(survey_labelled$know_spray)             <- "Knowledge: Spray house with insecticide"
+var_label(survey_labelled$know_meds)              <- "Knowledge: Take preventative medications"
+var_label(survey_labelled$know_clean)             <- "Knowledge: Keep surroundings clean"
+var_label(survey_labelled$know_screens)           <- "Knowledge: Put screens on windows"
+var_label(survey_labelled$know_other)             <- "Knowledge: Other way to avoid malaria"
+var_label(survey_labelled$know_dont)              <- "Knowledge: Does not know any way"
 
 # --- 5. CLEANUP & EXPORT ---
 message("Step 4: Cleanup and Export...")

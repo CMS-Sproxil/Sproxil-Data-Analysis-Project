@@ -641,6 +641,43 @@ df_analysis <- df %>%
     # Question: Experienced stockout in last 6 months?
     derived_exp_stockout = if_else(feedback_drug_stockout_6months == 1, 1, 0, missing=0),
     
+    
+    # --- I. COST & AFFORDABILITY (THE "ADVANTAGE" VARIABLES) ---
+    
+    # 1. Payment Incidence (Did they pay anything vs Free?)
+    # Logic: 0 = Free, 1-16 = Paid, 98/99 = Missing/DK
+    derived_paid_transport = case_when(
+      treat_transport_cost == 0 ~ 0, # Free
+      treat_transport_cost >= 1 & treat_transport_cost <= 16 ~ 1, # Paid
+      TRUE ~ NA_real_
+    ),
+    
+    derived_paid_test = case_when(
+      treat_test_cost == 0 ~ 0,
+      treat_test_cost >= 1 & treat_test_cost <= 16 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    
+    derived_paid_drugs = case_when(
+      treat_drug_cost == 0 ~ 0,
+      treat_drug_cost >= 1 & treat_drug_cost <= 16 ~ 1,
+      TRUE ~ NA_real_
+    ),
+    
+    # 2. High Cost Burden (Drugs)
+    # Logic: Arbitrary threshold for "Expensive" (e.g., > N2,000)
+    # Codes: 3 is N2000-N2999. So codes 3 and above are >N2000.
+    derived_drug_cost_high = case_when(
+      treat_drug_cost >= 3 & treat_drug_cost <= 16 ~ 1,
+      treat_drug_cost < 3 ~ 0,
+      TRUE ~ 0
+    ),
+    
+    # 3. Perceived Affordability (Binary)
+    # Logic: 1="Very Affordable", 2="Somewhat". 
+    # Negative: 4="Somewhat Exp", 5="Very Exp".
+    derived_perceived_expensive = if_else(treat_drug_affordability %in% c(4, 5), 1, 0, missing=0),
+    
   ) %>%
   
 #---------------------------------------------------------
@@ -754,6 +791,16 @@ val_lbl_inet_freq <- c(
   "Less than once a week" = 3, "Not at all" = 9
 )
 
+val_lbl_payment <- c(
+  "Free" = 0, 
+  "Paid" = 1
+)
+
+val_lbl_literacy <- c(
+  "Not Literate" = 0,
+  "Literate" = 1
+)
+
 # ------------------------------------------------------------------------------
 # 4.2 APPLY LABELS
 # ------------------------------------------------------------------------------
@@ -782,7 +829,13 @@ df_derived <- df_derive %>%
     derived_fever_sector = val_lbl_fever_sec,
     
     # Media
-    derived_internet_freq_cat = val_lbl_inet_freq
+    derived_internet_freq_cat = val_lbl_inet_freq,
+    
+    # Affordability
+    derived_paid_transport = val_lbl_payment,
+    derived_paid_test = val_lbl_payment,
+    derived_paid_drugs = val_lbl_payment,
+
   ) %>%
   
   # Apply Yes/No to ALL binary indicators created
@@ -797,7 +850,7 @@ df_derived <- df_derive %>%
     derived_fever_tested, derived_fever_diagnosed, derived_fever_referred,
     derived_took_any_antimalarial, derived_act_fever_resolved,
     derived_msg_heard_6m, derived_internet_use_12m,
-    derived_media_tv_weekly,
+    derived_media_tv_weekly, derived_drug_cost_high, derived_perceived_expensive,
     # Also apply to the specific drug/knowledge/source binaries
     starts_with("derived_med_"), 
     starts_with("derived_src_"),

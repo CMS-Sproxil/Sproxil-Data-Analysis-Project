@@ -5,7 +5,7 @@
 # DATE:    November 26, 2025
 #
 # DESCRIPTION:
-# 1. Defines the "Data Dictionary" based on the PDF Questionnaire.
+# 1. Defines the "Data Dictionary" based on the Sproxil Questionnaire.
 # 2. Defines the "Standard Names" to rename raw columns.
 #
 # OUTPUT: "Sproxil_mis_dictionary.rds"
@@ -18,13 +18,12 @@ library(knitr)
 # ==============================================================================
 # 1. DATA DICTIONARY (VALID ANSWER KEY)
 # ==============================================================================
-# Values extracted from the PDF Questionnaire.
 # Converted to ALL CAPS to match the cleaning script standardization.
 
 mis_data_dictionary <- list(
   
   # --- Meta Data ---
-  meta_status = c("COMPLETED", "QUOTA FULL", "TERMINATE", "PARTIAL"),
+  meta_status = c("USED", "IN-PROGRESS"),
   
   # --- Section 1: Demographics ---
   demo_gender = c("MALE", "FEMALE"),
@@ -34,7 +33,7 @@ mis_data_dictionary <- list(
     "I NEVER HAD ANY FORMAL EDUCATION", 
     "PRIMARY", 
     "SECONDARY", 
-    "HIGHER (POST SECONDARY) EDUCATION", "POSTGRADUATE", "VOCATIONAL"
+    "HIGHER (POST SECONDARY) EDUCATION", "POSTGRADUATE", "VOCATIONAL EDUCATION"
   ),
   
   # Page 2, Q5
@@ -55,13 +54,13 @@ mis_data_dictionary <- list(
     "LESS THAN A MONTH", "1 MONTH AGO", "2 MONTHS AGO", "3 MONTHS AGO", 
     "4 MONTHS AGO", "5 MONTHS AGO", "6 MONTHS AGO", "7 MONTHS AGO", 
     "8 MONTHS AGO", "9 MONTHS AGO", "10 MONTHS AGO", "11 MONTHS AGO", 
-    "12 MONTHS AGO", "13, MONTHS AGO", "14 MONTHS AGO", "15 MONTHS AGO", 
+    "12 MONTHS AGO", "13 MONTHS AGO", "14 MONTHS AGO", "15 MONTHS AGO", 
     "16 MONTHS AGO", "17 MONTHS AGO", "18 MONTHS AGO", "19 MONTHS AGO", 
     "20 MONTHS AGO", "21 MONTHS AGO", "22 MONTHS AGO", "23 MONTHS AGO", 
     "24 MONTHS AGO", "25 MONTHS AGO", "26 MONTHS AGO", "27 MONTHS AGO", 
     "28 MONTHS AGO", "29 MONTHS AGO", "30 MONTHS AGO", "31 MONTHS AGO", 
     "32 MONTHS AGO", "33 MONTHS AGO", "34 MONTHS AGO", "35 MONTHS AGO", 
-    "36 MOTHS AGO", "MORE THAN 36 MONTHS AGO", "NOT SURE"
+    "36 MONTHS AGO", "MORE THAN 36 MONTHS AGO", "NOT SURE"
   ),
   
   # Page 4, Q11
@@ -171,7 +170,7 @@ mis_data_dictionary <- list(
   # Page 9, Q30
   treat_know_smc_drug = c(
     "SULFADOXINE-PYRIMETHAMINE + AMODIAQUINE", 
-    "SULFADOXINE-PYRIMETHAMIN", 
+    "SULFADOXINE-PYRIMETHAMINE", 
     "ARTEMETHER-LUMEFANTRINE", 
     "ARTESUNATE + AMODIAQUINE", 
     "DIHYDROARTEMISININ-PIPERAQUINE", 
@@ -290,7 +289,7 @@ mis_data_dictionary <- list(
   ),
   
   # Page 16, Q22
-  women_child_act_effective = c("YES", "NO", "I DON'T KNO"),
+  women_child_act_effective = c("YES", "NO", "I DON'T KNOW"),
   
   # Page 17, Q23
   women_currently_pregnant = c("YES", "NO", "NOT SURE"),
@@ -367,7 +366,7 @@ mis_data_dictionary <- list(
     "PUBLIC TAP/STANDPIPE", "TUBEWELL OR BOREHOLE", "PROTECTED WELL", 
     "UNPROTECTED WELL", "RAINWATER", "TANKER TRUCK", "CART WITH SMALL TANK", 
     "SURFACE WATER (RIVER/DAM/POND/STREAM/CANAL/IRRIGATION CHANNEL)", 
-    "BOTTLED WATER", "SATCHET WATER"
+    "BOTTLED WATER", "SACHET WATER"
   ),
   
   # Page 24, Q7 uses the same list as above
@@ -393,7 +392,7 @@ mis_data_dictionary <- list(
   # Page 25, Q10
   hh_toilet_facility_type = c(
     "FLUSH TO PIPE SEWER SYSTEM", "FLUSH TO SEPTIC TANK", "FLUSH TO PIT LATRINE", 
-    "FLUSH TO SOMEWHERE ELSE", "FKUSH DON'T KNOW WHERE", 
+    "FLUSH TO SOMEWHERE ELSE", "FLUSH DON'T KNOW WHERE", 
     "VENTILATED IMPROVED PIT LATRINE", "PIT LATRINE WITH SLAB", 
     "PIT LATRINE WITHOUT SLAB/OPEN PIT", "COMPOSTING TOILET", "BUCKET TOILET", 
     "HANGING TOILET/HANGING LATRINE", "NO FACILITY/BUSH/FIELD", 
@@ -417,7 +416,7 @@ mis_data_dictionary <- list(
   # Page 27, Q15
   hh_cookstove_fuel = c(
     "ALCOHOL/ETHANOL", "GASOLINE/DIESEL", "KEROSENE/PARAFFIN", "COAL/LIGNITE", 
-    "CHARCOAL", "WOOD", "STRAW/SHUBS/GRASS", "AGRICULTURAL CROP", 
+    "CHARCOAL", "WOOD", "STRAW/SHRUBS/GRASS", "AGRICULTURAL CROP", 
     "ANIMAL DUNG/WASTE", "PROCESSED BIOMASS (PELLETS)/WOODCHIPS", 
     "GARBAGE/PLASTIC", "SAWDUST", "OTHERS (SPECIFY)", 
     "NO FOOD COOKED IN HOUSEHOLD"
@@ -445,7 +444,7 @@ mis_data_dictionary <- list(
   hh_roof_material = c(
     "NO ROOF", "THATCH/PALM LEAF", "GRASS", "RUSTIC MAT", "PALM/BAMBOO", 
     "WOOD PLANKS", "CARDBOARD", "METAL/ZINC", "WOOD", 
-    "CELAMINE/CEMENT FIBER", "CERAMIC TILES", "CEMENT", "ROOFING SHYNGLES", 
+    "CELAMINE/CEMENT FIBER", "CERAMIC TILES", "CEMENT", "ROOFING SHINGLES", 
     "ASBESTOS", "OTHER (SPECIFY)"
   ),
   
@@ -454,7 +453,7 @@ mis_data_dictionary <- list(
     "NO WALLS", "CANE/PALM/TRUNKS", "DIRT", "BAMBOO WITH MUD", 
     "UNCOVERED ADOBE", "PLYWOOD", "CARDBOARD", "REUSED WOOD", "CEMENT", 
     "STONE WITH LIME/CEMENT", "BRICKS", "CEMENT BLOCKS", "COVERED ADOBE", 
-    "WOOD PLANKS/SHYNGLES", "OTHER (SPECIFY)"
+    "WOOD PLANKS/SHINGLES", "OTHER (SPECIFY)"
   )
 )
 

@@ -5,7 +5,8 @@
 # DATE:    23 November 2025
 #
 # DESCRIPTION:
-# This script loads 
+# This script generates the reference file "Sproxil_Data_Dictionary.xlsx".
+# Variable names have been updated to match the "standard_names_vector". 
 #
 # OUTPUT: "Sproxil_Data_Dictionary.rds"
 #===============================================================================
@@ -15,8 +16,7 @@ library(writexl)
 # ==============================================================================
 # SPROXIL MIS: DATA DICTIONARY GENERATION SCRIPT
 # ==============================================================================
-# This script generates the reference file "Sproxil_Data_Dictionary.xlsx".
-# Variable names have been updated to match the "standard_names_vector".
+
 
 # --- 1. Define Common Value Label Strings ---
 val_yes_no      <- "1=Yes; 0=No; 8=Don't Know; 9=Refused/Missing"

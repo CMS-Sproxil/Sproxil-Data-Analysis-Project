@@ -131,8 +131,7 @@ mutate(
   hh_toilet_share_count = force_blank(hh_toilet_share_count, hh_toilet_shared, "YES"),
   
   # If No Livestock, wipe Animal Counts AND Agri Land (PDF Page 27 Skip Logic)
-  across(c(hh_num_cows_bulls, hh_num_goats, hh_num_sheep, hh_num_poultry, 
-           hh_owns_agri_land, hh_num_agri_plots), 
+  across(c(hh_num_cows_bulls, hh_num_other_cattle, hh_num_horses_donkeys, hh_num_goats, hh_num_sheep, hh_num_poultry, hh_num_pigs, hh_num_camels), 
          ~force_blank(., hh_owns_livestock, "YES")),
   
   # If No Agri Land (Nested check), wipe Plots
@@ -234,7 +233,7 @@ mutate(
 
 # --- 4. FINAL CLEANUP ---
 sproxil_final <- sproxil_final %>%
-  filter(meta_status %in% c("USED", "COMPLETED"))
+  filter(meta_status %in% c("USED"))
 
 # Remove the temporary flag columns before final save
 sproxil_cleaned <- sproxil_final %>%
