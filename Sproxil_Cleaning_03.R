@@ -9,10 +9,11 @@
 library(dplyr)    
 library(tidyr)    
 library(knitr)    
-library(openxlsx) 
+library(openxlsx)
+library(readxl)
 library(readr)    
 library(stringr)  
-library(haven)    # Crucial for SPSS (.sav) export
+library(haven)
 
 # --- 2. CONFIGURATION ---
 INPUT_FILE_PATH <- "Sproxil_Malaria_Data.xlsx"
@@ -36,7 +37,7 @@ variable_labels_map <- c(
   "prev_has_mosquito_nets" = "Does your household have any mosquito nets?",
   "prev_num_mosquito_nets" = "How many mosquito nets does your household have?",
   "prev_months_since_net_obtained" = "How many months ago did your household get the mosquito net?",
-  "prev_net_brand" = "What brand of mosquito nets do members of this household use? (LLLNG means Long-lasting insecticide-treated net)",
+  "prev_net_brand" = "What brand of mosquito nets do members of this household use?  (LLLNG means Long-lasting insecticide-treated net)",
   "prev_net_obtained_how" = "How did you get the mosquito net?",
   "prev_net_obtained_where" = "Where did you get the net?",
   "prev_num_people_slept_net" = "How many people slept inside this mosquito net last night?",
@@ -44,16 +45,16 @@ variable_labels_map <- c(
   "prev_repellent_methods" = "Do you use any of these mosquito repellent methods?",
   "prev_first_treatment_location" = "Where do you usually go first to seek malaria treatment?",
   "prev_time_to_treatment_facility" = "How long does it take to reach the nearest healthcare facility to seek malaria treatment?",
-  "treat_transport_cost" = "How much do you spend on transport cost (to and fro) to visit the nearest healthcare facility to seek malaria treatment",
+  "treat_transport_cost" = "How much do you spend on transport cost (to and fro) to visit  the nearest healthcare facility to seek malaria treatment",
   "treat_hh_fever_last_2weeks" = "Have you or anyone in your household had fever in the last 2 weeks?",
   "treat_blood_sample_taken" = "Was a blood sample taken from any part of their body for testing before treatment was given?",
   "treat_test_cost" = "How much did the test cost you?",
   "treat_drug_cost" = "How much did your last malaria drugs cost?",
-  "treat_drug_purchase_time" = "When did you buy your last malaria drug?",
+  "treat_drug_purchase_time" = "When did you buy  your last malaria drug?",
   "treat_drug_affordability" = "Rate the affordability of malaria drugs in your community",
   "treat_heard_smc" = "Have you heard about Seasonal Malaria Chemoprevention (SMC)?",
   "treat_children_received_smc" = "Have your children ever received Seasonal Malaria Chemoprevention (SMC) treatment?",
-  "treat_know_smc_drug" = "Do you know the drug that was administered to your children during the Seasonal Malaria Chemoprevention?",
+  "treat_know_smc_drug" = "Do you know the drug that was administered to your children during  the Seasonal Malaria  Chemoprevention?",
   "treat_vaccine_age_knowledge" = "At what age should a child receive the first dose of the malaria vaccine",
   "treat_children_received_vaccine" = "Have your children ever received a malaria vaccine dose?",
   "feedback_free_treatment_6months" = "Have you received free malaria treatment at a government facility in the last 6 months?",
@@ -153,37 +154,38 @@ variable_labels_map <- c(
   "hh_own_canoe" = "Does any member of this household own a canoe?",
   "hh_own_keke_napep" = "Does any member of this household own a keke napep?",
   "hh_has_bank_account" = "Does any member of this household have an account in a bank or other financial institution?",
-  "hh_mobile_money_usage" = "Does any member of this household use a mobile phone to make financial transactions?",
+  "hh_mobile_money_usage" = "Does any member of this household use a mobile phone to make financial transactions such as sending or receiving money, paying bills, purchasing goods or services, or receiving wages?",
   "hh_floor_material" = "What is the MAIN material used for the FLOOR of the house you live in?",
   "hh_roof_material" = "What is the MAIN material used for the ROOF of the house you live in?",
   "hh_wall_material" = "What is the MAIN material used for the WALL of the house you live in?"
 )
 
-# C. HELPER FUNCTIONS
+# ==============================================================================
+# C. HELPER FUNCTIONS (EXACT MATCH VERSION)
+# ==============================================================================
 safe_rename_columns <- function(dataframe, labels_map) {
-  # We MUST squish Excel headers because invisible trailing spaces will break the match
-  actual_headers <- str_squish(names(dataframe))
-  names(dataframe) <- actual_headers
   
-  # Invert the map so it is: "Excel Header" = "New_R_Name"
-  rename_lookup <- setNames(names(labels_map), labels_map)
+  # 1. Get current headers from the data
+  actual_headers <- names(dataframe)
   
-  # Check for mismatches
-  missing_in_map <- setdiff(actual_headers, names(rename_lookup))
-  missing_in_excel <- setdiff(names(rename_lookup), actual_headers)
+  # 2. Get expected headers from your map
+  required_excel_headers <- unname(labels_map)
   
-  if (length(missing_in_map) > 0) {
-    message("⚠️ WARNING: These Excel columns were not found in your R mapping:")
-    print(missing_in_map)
-  }
+  # 3. CRITICAL CHECK: Columns in Map but NOT in Excel
+  # This checks for EXACT string matches (spaces, punctuation must be identical)
+  missing_in_excel <- setdiff(required_excel_headers, actual_headers)
   
   if (length(missing_in_excel) > 0) {
-    message("❌ CRITICAL: These mapped names were NOT found in the Excel headers:")
+    message("❌ CRITICAL ERROR: The following columns were NOT found in the Excel file:")
     print(missing_in_excel)
+    stop("Script stopped. Check spelling in 'variable_labels_map' exactly against Excel.")
   }
   
-  # Rename using the lookup table
-  dataframe <- dataframe %>% rename(any_of(rename_lookup))
+  # 4. Rename
+  # dplyr::rename takes arguments in the format: new_name = old_name
+  # Your variable_labels_map is already in this format.
+  dataframe <- dataframe %>% rename(any_of(labels_map))
+  
   return(dataframe)
 }
 
@@ -193,38 +195,77 @@ safe_rename_columns <- function(dataframe, labels_map) {
 
 # --- Step 4.1: Load & Standardize ---
 cat("--- 1. Loading and Standardizing Data ---\n")
-raw_data_df <- read.xlsx(INPUT_FILE_PATH, sheet = 3) 
+raw_data_df <- read_excel(INPUT_FILE_PATH, sheet = 3)
 
-# Apply the Professional Key-Value Renaming
+# Apply the Key-Value Renaming
 sproxil_df <- safe_rename_columns(raw_data_df, variable_labels_map)
 
 # --- Step 4.2: Text Cleaning (Data Values) ---
 sproxil_df <- sproxil_df %>%
   mutate(across(where(is.character), ~ str_squish(toupper(.))))
 
-# --- Step 4.3: Content Validation (Dictionary) ---
-cat("--- 2. Data Content Validation ---\n")
+# --- Define Multi-Select Columns ---
+multi_select_cols <- c(
+  "demo_edu_informal",
+  "prev_repellent_methods",
+  "women_anc_provider",
+  "women_anc_location",
+  "women_sp_fansidar_source",
+  "women_child_advice_location",
+  "women_child_medicine_type",
+  "bg_malaria_msg_source",
+  "bg_prevention_knowledge"
+)
+
+# --- Step 4.3: Content Validation (Dictionary Check with Multi-Select Support) ---
+cat("--- Validating Data Content ---\n")
+
 if(file.exists("Sproxil_mis_dictionary.rds")) {
   mis_data_dictionary <- readRDS("Sproxil_mis_dictionary.rds")
   
   invalid_report <- list()
-  for (col in names(sproxil_df)) {
-    if (col %in% names(mis_data_dictionary)) {
-      allowed_vals <- mis_data_dictionary[[col]]
-      actual_vals <- unique(na.omit(sproxil_df[[col]]))
-      bad_vals <- setdiff(actual_vals, allowed_vals)
-      if (length(bad_vals) > 0) invalid_report[[col]] <- paste(bad_vals, collapse = "; ")
+  
+  # Only check columns that exist in BOTH the dataframe AND the dictionary
+  cols_to_check <- intersect(names(sproxil_df), names(mis_data_dictionary))
+  
+  for (col in cols_to_check) {
+    # 1. Get allowed values from dictionary
+    allowed <- mis_data_dictionary[[col]]
+    
+    # 2. Get actual values from data (exclude NA)
+    raw_vals <- na.omit(sproxil_df[[col]])
+    
+    # 3. LOGIC: Handle Multi-Select vs Single-Select
+    if (col %in% multi_select_cols) {
+      # If multi-select, split the string by comma, semicolon, or space to check items.
+      # NOTE: Adjust the regex "[;,]+" below if your data uses a different separator.
+      # We rely on str_trim to clean up whitespace around the split items.
+      actual_items <- unlist(str_split(raw_vals, "[;,]+"))
+      actual <- unique(str_trim(actual_items))
+      actual <- actual[actual != ""] # Remove empty strings
+    } else {
+      # Single select: treat the whole cell as one value
+      actual <- unique(raw_vals)
+    }
+    
+    # 4. Find invalid values
+    bad_vals <- setdiff(actual, allowed)
+    
+    if (length(bad_vals) > 0) {
+      invalid_report[[col]] <- paste(bad_vals, collapse = "; ")
     }
   }
   
   if (length(invalid_report) > 0) {
-    cat("WARNING: Unknown values found in data:\n")
-    print(kable(as.data.frame(invalid_report), format = "simple"))
+    cat("\n⚠️  WARNING: The following values in the data do NOT match the Dictionary:\n")
+    print(kable(as.data.frame(invalid_report), col.names = c("Invalid Values Found")))
+    # Stops script so you can fix dictionary or data before proceeding
+    # stop("Validation failed. Please fix the values above in your Raw Data or Data Dictionary.") 
   } else {
-    cat("Success: All categorical values match the Data Dictionary.\n")
+    cat("✅ SUCCESS: All categorical values match the Data Dictionary.\n")
   }
 } else {
-  message("SKIPPING Dictionary Validation: 'Sproxil_mis_dictionary.rds' not found.")
+  warning("Dictionary file not found. Skipping validation.")
 }
 
 # --- Step 4.4: Logic-Aware Missing Value Analysis ---
@@ -237,8 +278,138 @@ if(nrow(missing_df) == 0) {
   stop("CRITICAL ERROR: No rows found with Status == 'USED'. Check your spelling in the Excel file.")
 }
 
-# [Missing value checks remain as in your original script, but now using the verified names]
-# ... (universal_vars and conditional logic sections go here) ...
+cat(paste("Performing missing value analysis on", nrow(missing_df), "completed surveys.\n"))
+
+# A. UNIVERSAL VARIABLES (Group A)
+universal_vars <- c(
+  "meta_respondent_id", "meta_status", "demo_gender", "demo_edu_level", 
+  "demo_hh_children_under5", "demo_hh_sleeping_rooms",
+  "prev_has_mosquito_nets", "prev_home_sprayed_interior", "prev_repellent_methods",
+  "prev_first_treatment_location", "prev_time_to_treatment_facility",
+  "treat_transport_cost", "treat_hh_fever_last_2weeks", "treat_heard_smc", 
+  "treat_vaccine_age_knowledge",
+  "feedback_free_treatment_6months", "feedback_drug_stockout_6months", 
+  "feedback_gov_effort_rating",
+  "bg_tv_frequency", "bg_own_smartphone", "bg_internet_ever_used", 
+  "bg_religion", "bg_heard_malaria_msg_6months", "bg_aware_avoidance",
+  "att_rainy_season_only", "att_fever_worry_malaria", "att_malaria_easily_treated", 
+  "att_weak_children_die", "att_net_use_mosquito_density", 
+  "att_net_use_warm_weather", "att_home_meds_first", "att_full_dose_importance", 
+  "att_seek_care_immediate", "att_community_net_usage",
+  "hh_total_persons_v1", "hh_drinking_water_source", "hh_toilet_type",
+  "hh_cookstove_type", "hh_owns_livestock", "hh_owns_agri_land",
+  "hh_floor_material", "hh_roof_material", "hh_wall_material",
+  "hh_has_electricity", "hh_has_radio", "hh_has_tv", "hh_has_non_mobile_phone",
+  "hh_has_computer", "hh_has_refrigerator", "hh_has_table", "hh_has_chair",
+  "hh_has_bed", "hh_has_sofa", "hh_has_cupboard", "hh_has_ac", 
+  "hh_has_electric_iron", "hh_has_generator", "hh_has_fan", "hh_own_watch", 
+  "hh_own_mobile_phone", "hh_own_bicycle", "hh_own_motorcycle", 
+  "hh_own_animal_cart", "hh_own_car_truck", "hh_own_motor_boat", 
+  "hh_own_canoe", "hh_own_keke_napep", "hh_has_bank_account", 
+  "hh_mobile_money_usage"
+)
+
+
+missing_universal <- missing_df %>%
+  select(any_of(universal_vars)) %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Missing_Count") %>%
+  filter(Missing_Count > 0) %>%
+  mutate(Type = "Universal Missing")
+
+# B. CONDITIONAL VARIABLES (Group B)
+missing_conditional <- missing_df %>%
+  summarise(
+    # Prev: Nets Logic
+    prev_nets_logic = sum(prev_has_mosquito_nets == "YES" & 
+                            (is.na(prev_num_mosquito_nets) | is.na(prev_net_brand) | 
+                               is.na(prev_net_obtained_how) | is.na(prev_net_obtained_where) | 
+                               is.na(prev_num_people_slept_net)), na.rm = TRUE),
+    
+    # Treat: Fever Logic (Flow to Blood)
+    treat_fever_logic = sum(treat_hh_fever_last_2weeks == "YES" & 
+                              is.na(treat_blood_sample_taken), na.rm = TRUE),
+    
+    # Treat: Blood Logic (Flow to Test Cost)
+    treat_blood_logic = sum(treat_blood_sample_taken == "YES" & 
+                              is.na(treat_test_cost), na.rm = TRUE),
+    
+    # Treat: SMC Heard -> Recieved
+    treat_smc_heard_logic = sum(treat_heard_smc == "YES" & 
+                                  is.na(treat_children_received_smc), na.rm = TRUE),
+    
+    # Treat: SMC Recieved -> Know Drug
+    treat_smc_rec_logic = sum(treat_children_received_smc == "YES" & 
+                                is.na(treat_know_smc_drug), na.rm = TRUE),
+    
+    # Treat: Vaccine Know -> Recieved
+    treat_vaccine_logic = sum(!str_detect(treat_vaccine_age_knowledge, "DON'T KNOW") & 
+                                is.na(treat_children_received_vaccine), na.rm = TRUE),
+    
+    # Women: Base Gender Check
+    women_gender_logic = sum(demo_gender == "FEMALE" & 
+                               is.na(women_ever_given_birth), na.rm = TRUE),
+    
+    # Women: Birth -> Count
+    women_birth_logic = sum(women_ever_given_birth == "YES" & 
+                              (is.na(women_births_2020_2025) | is.na(women_anc_seen)), na.rm = TRUE),
+    
+    # Women: ANC -> Details
+    women_anc_logic = sum(women_anc_seen == "YES" & 
+                            (is.na(women_anc_provider) | is.na(women_anc_location)), na.rm = TRUE),
+    
+    # Women: SP -> Doses/Source
+    women_sp_logic = sum(women_took_sp_fansidar == "YES" & 
+                           (is.na(women_sp_fansidar_doses) | is.na(women_sp_fansidar_source)), na.rm = TRUE),
+    
+    # Women: Child Fever -> Details
+    women_child_fever_logic = sum(women_child_fever_2weeks == "YES" & 
+                                    (is.na(women_child_blood_sample) | is.na(women_child_malaria_diagnosis)), na.rm = TRUE),
+    
+    # Women: Meds -> Type
+    women_child_meds_logic = sum(women_child_took_medicine == "YES" & 
+                                   is.na(women_child_medicine_type), na.rm = TRUE),
+    
+    # Women: Pregnant -> Duration
+    women_preg_logic = sum(women_currently_pregnant == "YES" & 
+                             is.na(women_pregnancy_duration_months), na.rm = TRUE),
+    
+    # Background: Internet -> Freq
+    bg_internet_logic = sum(bg_internet_ever_used == "YES" & 
+                              is.na(bg_internet_frequency), na.rm = TRUE),
+    
+    # Background: Msg -> Source
+    bg_msg_logic = sum(bg_heard_malaria_msg_6months == "YES" & 
+                         is.na(bg_malaria_msg_source), na.rm = TRUE),
+    
+    # Background: Avoid -> Methods
+    bg_avoid_logic = sum(bg_aware_avoidance == "YES" & 
+                           is.na(bg_prevention_knowledge), na.rm = TRUE),
+    
+    # Household: Toilet -> Shared/Location (If not No Facility)
+    hh_toilet_logic = sum(!str_detect(hh_toilet_type, "NO FACILITY") & 
+                            (is.na(hh_toilet_shared) | is.na(hh_toilet_location)), na.rm = TRUE),
+    
+    # Household: Livestock -> Counts
+    hh_livestock_logic = sum(hh_owns_livestock == "YES" & 
+                               (is.na(hh_num_cows_bulls) | is.na(hh_num_goats)), na.rm = TRUE),
+    
+    # Household: Agri -> Plots
+    hh_agri_logic = sum(hh_owns_agri_land == "YES" & 
+                          is.na(hh_num_agri_plots), na.rm = TRUE)
+  ) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Missing_Count") %>%
+  filter(Missing_Count > 0) %>%
+  mutate(Type = "Conditional Logic Missing")
+
+final_missing_report <- bind_rows(missing_universal, missing_conditional)
+
+if(nrow(final_missing_report) > 0) {
+  cat("WARNING: Unexpected Missing Values Found!\n")
+  print(kable(final_missing_report))
+} else {
+  cat("SUCCESS: No missing data found in Universal vars or Conditional paths.\n")
+}
 
 # ==============================================================================
 # 5. EXPORT
