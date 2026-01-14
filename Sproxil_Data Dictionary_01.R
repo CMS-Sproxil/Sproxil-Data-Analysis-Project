@@ -81,7 +81,7 @@ mis_data_dictionary <- list(
   
   # Page 4, Q13
   prev_net_obtained_where = c(
-    "DON'T KNOW", "GOVERNMENT HEALTH FACILITY", "PRIVATE HEALTH FACILITY", 
+    "I DON'T KNOW", "GOVERNMENT HEALTH FACILITY", "PRIVATE HEALTH FACILITY", 
     "PHARMACY", "SHOP/MARKET", "CHW", "RELIGIOUS INSTITUTION", "SCHOOL", 
     "OTHER (SPECIFY)"
   ),
@@ -164,7 +164,8 @@ mis_data_dictionary <- list(
   treat_children_received_smc = c(
     "YES", 
     "NO AND I HAVE A CHILD OF 5 YEARS OR BELOW", 
-    "NO, I DO NOT HAVE A CHILD OF 5 YEARS OR BELOW"
+    "NO, I DO NOT HAVE A CHILD OF 5 YEARS OR BELOW",
+    "I DON'T KNOW WHAT IT IS"
   ),
   
   # Page 9, Q30
@@ -269,7 +270,7 @@ mis_data_dictionary <- list(
   ),
   
   # Page 15, Q18
-  women_child_referral = c("YES", "NO", "DON'T KNOW"),
+  women_child_referral = c("YES", "NO", "I DON'T KNOW"),
   
   # Page 16, Q19
   women_child_took_medicine = c("YES", "NO", "I DON'T KNOW"),
@@ -332,7 +333,7 @@ mis_data_dictionary <- list(
   
   # Page 20, Q11
   bg_prevention_knowledge = c(
-    "DON'T KNOW", 
+    "I DON'T KNOW", 
     "SLEEP INSIDE A MOSQUITO NET", 
     "SLEEP INSIDE AN INSECTICIDE-TREATED MOSQUITO NET", 
     "USE MOSQUITO REPELANT OR COIL", 

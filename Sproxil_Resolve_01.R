@@ -23,7 +23,7 @@ OUT_RDS     <- "Sproxil_Resolved.rds"
 OUT_SPSS    <- "Sproxil_Resolved.sav"
 
 if(!file.exists(INPUT_FILE)) stop("Input file not found. Run Cleaning Script first.")
-sproxil_df <- readRDS(INPUT_FILE)
+sproxil_resolve <- readRDS(INPUT_FILE)
 
 # --- 2. HELPER FUNCTIONS ---
 
@@ -50,7 +50,7 @@ fix_text_cond <- function(target, trigger_col, trigger_val, replacement="NO RESP
 # 3. MAIN RESOLUTION PIPELINE
 # ==============================================================================
 
-sproxil_final <- sproxil_df %>%
+sproxil_resolve <- sproxil_resolve %>%
   
   # ----------------------------------------------------------------------------
 # PHASE 1: BLANKING (Removing Unexpected Values / Commission Errors)
@@ -232,15 +232,15 @@ mutate(
 )
 
 # --- 4. FINAL CLEANUP ---
-sproxil_final <- sproxil_final %>%
+sproxil_resolve <- sproxil_resolve %>%
   filter(meta_status %in% c("USED"))
 
 # Remove the temporary flag columns before final save
-sproxil_cleaned <- sproxil_final %>%
+sproxil_resolved <- sproxil_resolve %>%
   select(-starts_with("flag_"))
 
 # --- 5. EXPORT ---
 cat("Exporting resolved datasets...\n")
-saveRDS(sproxil_cleaned, OUT_RDS)
-write_sav(sproxil_cleaned, OUT_SPSS)
+saveRDS(sproxil_resolved, OUT_RDS)
+write_sav(sproxil_resolved, OUT_SPSS)
 cat("Files saved successfully.\n")

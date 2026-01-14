@@ -80,7 +80,7 @@ df <- df %>%
     # 4. ANC Location
     anc_loc_govhos  = dummify(women_anc_location, "GOVERNMENT HOSPITAL"),
     anc_loc_govcen  = dummify(women_anc_location, "GOVERNMENT HEALTH CENTER"),
-    anc_loc_govpos  = dummify(women_anc_location, "GOVERNMENT HEALTH POST"),
+    anc_loc_govpost  = dummify(women_anc_location, "GOVERNMENT HEALTH POST"),
     anc_loc_pvt  = dummify(women_anc_location, "PRIVATE"),
     anc_loc_ngohos  = dummify(women_anc_location, "NGO HOSPITAL"),
     anc_loc_ngoclin  = dummify(women_anc_location, "NGO CLINIC"),
@@ -324,7 +324,8 @@ df_recoded <- df %>%
       is.na(treat_children_received_smc) ~ NA_real_,
       treat_children_received_smc == "YES" ~ 1,
       str_detect(treat_children_received_smc, "NO AND I HAVE A CHILD") ~ 0,
-      str_detect(treat_children_received_smc, "NO, I DO NOT HAVE A CHILD") ~ 6, 
+      str_detect(treat_children_received_smc, "NO, I DO NOT HAVE A CHILD") ~ 6,
+      str_detect(treat_children_received_smc, "I DON'T KNOW WHAT IT IS") ~ 8,
       TRUE ~ 9
     ),
     
@@ -333,6 +334,7 @@ df_recoded <- df %>%
       treat_children_received_vaccine == "YES" ~ 1,
       str_detect(treat_children_received_vaccine, "NO AND I HAVE A CHILD") ~ 0,
       str_detect(treat_children_received_vaccine, "NO, I DO NOT HAVE A CHILD") ~ 6, 
+      str_detect(treat_children_received_vaccine, "I DON'T KNOW WHAT IT IS") ~ 8,
       TRUE ~ 9
     ),
     
@@ -769,7 +771,8 @@ val_lbl_relation <- c(
   "Other Relative" = 9, "Adopted" = 10, "Not Related" = 11, "Don't Know" = 98, "Other/Missing" = 99
 )
 
-val_lbl_smc_elig <- c("Yes" = 1, "No (Has Child)" = 0, "No (No Child)" = 6, "Other/Missing" = 9)
+val_lbl_smc_elig <- c("Yes" = 1, "No (Has Child)" = 0, "No (No Child)" = 6, "I don't know" = 8, "Other/Missing" = 9)
+val_lbl_feedback <- c("Yes" = 1, "No (Has Child)" = 0, "No (No Child)" = 6, "Other/Missing" = 9)
 val_lbl_rating   <- c("Very Effective" = 5, "Somewhat Effective" = 4, "Neutral" = 3, "Somewhat Ineffective" = 2, "Very Ineffective" = 1, "Other/Missing" = 9)
 val_lbl_freq     <- c("Daily/Often" = 1, "Weekly/Rarely" = 2, "Never" = 3, "Other/Missing" = 9)
 val_lbl_relig    <- c("Catholic" = 1, "Christian" = 2, "Islam" = 3, "Traditional" = 4, "Other" = 6, "Other/Missing" = 9)
@@ -796,8 +799,8 @@ survey_labelled <- df_recoded %>%
     treat_drug_affordability = val_lbl_afford,
     treat_children_received_smc = val_lbl_smc_elig,
     treat_children_received_vaccine = val_lbl_smc_elig,
-    feedback_free_treatment_6months = val_lbl_smc_elig,
-    feedback_drug_stockout_6months = val_lbl_smc_elig,
+    feedback_free_treatment_6months = val_lbl_feedback,
+    feedback_drug_stockout_6months = val_lbl_feedback,
     feedback_gov_effort_rating = val_lbl_rating,
     treat_vaccine_age_knowledge = val_lbl_vaccine_age,
     women_child_first_advice_location = val_lbl_loc,

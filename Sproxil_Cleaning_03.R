@@ -198,10 +198,10 @@ cat("--- 1. Loading and Standardizing Data ---\n")
 raw_data_df <- read_excel(INPUT_FILE_PATH, sheet = 3)
 
 # Apply the Key-Value Renaming
-sproxil_df <- safe_rename_columns(raw_data_df, variable_labels_map)
+sproxil_clean <- safe_rename_columns(raw_data_df, variable_labels_map)
 
 # --- Step 4.2: Text Cleaning (Data Values) ---
-sproxil_df <- sproxil_df %>%
+sproxil_clean <- sproxil_clean %>%
   mutate(across(where(is.character), ~ str_squish(toupper(.))))
 
 # --- Define Multi-Select Columns ---
@@ -217,38 +217,33 @@ multi_select_cols <- c(
   "bg_prevention_knowledge"
 )
 
+sproxil_clean <- sproxil_clean %>%
+  mutate(across(all_of(multi_select_cols), as.character))
+
 # --- Step 4.3: Content Validation (Dictionary Check with Multi-Select Support) ---
 cat("--- Validating Data Content ---\n")
 
-if(file.exists("Sproxil_mis_dictionary.rds")) {
-  mis_data_dictionary <- readRDS("Sproxil_mis_dictionary.rds")
+if (file.exists("Sproxil_mis_dictionary.rds")) {
   
+  mis_data_dictionary <- readRDS("Sproxil_mis_dictionary.rds")
   invalid_report <- list()
   
   # Only check columns that exist in BOTH the dataframe AND the dictionary
-  cols_to_check <- intersect(names(sproxil_df), names(mis_data_dictionary))
+  cols_to_check <- intersect(names(sproxil_clean), names(mis_data_dictionary))
   
   for (col in cols_to_check) {
-    # 1. Get allowed values from dictionary
+    
     allowed <- mis_data_dictionary[[col]]
+    raw_vals <- na.omit(sproxil_clean[[col]])
     
-    # 2. Get actual values from data (exclude NA)
-    raw_vals <- na.omit(sproxil_df[[col]])
-    
-    # 3. LOGIC: Handle Multi-Select vs Single-Select
     if (col %in% multi_select_cols) {
-      # If multi-select, split the string by comma, semicolon, or space to check items.
-      # NOTE: Adjust the regex "[;,]+" below if your data uses a different separator.
-      # We rely on str_trim to clean up whitespace around the split items.
-      actual_items <- unlist(str_split(raw_vals, "[;,]+"))
-      actual <- unique(str_trim(actual_items))
-      actual <- actual[actual != ""] # Remove empty strings
+      actual_items <- unlist(stringr::str_split(raw_vals, "[;,]+"))
+      actual <- unique(stringr::str_trim(actual_items))
+      actual <- actual[actual != ""]
     } else {
-      # Single select: treat the whole cell as one value
       actual <- unique(raw_vals)
     }
     
-    # 4. Find invalid values
     bad_vals <- setdiff(actual, allowed)
     
     if (length(bad_vals) > 0) {
@@ -257,21 +252,35 @@ if(file.exists("Sproxil_mis_dictionary.rds")) {
   }
   
   if (length(invalid_report) > 0) {
-    cat("\n⚠️  WARNING: The following values in the data do NOT match the Dictionary:\n")
-    print(kable(as.data.frame(invalid_report), col.names = c("Invalid Values Found")))
-    # Stops script so you can fix dictionary or data before proceeding
-    # stop("Validation failed. Please fix the values above in your Raw Data or Data Dictionary.") 
+    
+    warning(
+      "Data Dictionary validation found invalid values. See printed table for details.",
+      call. = FALSE
+    )
+    
+    invalid_df <- tibble(
+      Variable = names(invalid_report),
+      `Invalid Values Found` = unlist(invalid_report)
+    )
+    
+    print(kable(invalid_df))
+    
+    
+    # ⚠️ No stop() — script continues
+    
   } else {
     cat("✅ SUCCESS: All categorical values match the Data Dictionary.\n")
   }
+  
 } else {
-  warning("Dictionary file not found. Skipping validation.")
+  warning("Dictionary file not found. Skipping validation.", call. = FALSE)
 }
+
 
 # --- Step 4.4: Logic-Aware Missing Value Analysis ---
 cat("--- 3. Comprehensive Missing Value Analysis ---\n")
 
-missing_df <- sproxil_df %>% 
+missing_df <- sproxil_clean %>% 
   filter(meta_status == "USED")
 
 if(nrow(missing_df) == 0) {
