@@ -7,8 +7,9 @@
 # DESCRIPTION:
 # 1. Defines the "Data Dictionary" based on the Sproxil Questionnaire.
 # 2. Defines the "Standard Names" to rename raw columns.
+# 3. Defines the descriptive labels for variables and values.
 #
-# OUTPUT: "Sproxil_mis_dictionary.rds"
+# OUTPUT: "Sproxil_dictionary.rds"
 # ==============================================================================
 
 library(dplyr)
@@ -265,8 +266,8 @@ mis_data_dictionary <- list(
   hh_members_under5 = c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "MORE THAN 10"),
   hh_total_persons_usually_v3 = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "MORE THAN 10"),    
   hh_relation_to_head = c("HEAD", "WIFE OR HUSBAND", "SON OR DAUGHTER", "SON-IN-LAW OR DAUGHTER-IN-LAW", "GRANDCHILD", "PARENT", "PARENT-IN-LAW", "BROTHER OR SISTER", "OTHER RELATIVE", "ADOPTED/FOSTER/STEPCHILD", "NOT RELATED", "CO-WIFE", "I DON'T KNOW"),
-  hh_drinking_water_source = c("PIPED IN DWELLING", "PIPED TO YARD/PLOT", "PIPED TO NEIGHBOR", "PUBLIC TAP/STANDPIPE", "TUBEWELL OR BOREHOLE", "PROTECTED WELL", "UNPROTECTED WELL", "RAINWATER", "TANKER TRUCK", "CART WITH SMALL TANK", "SURFACE WATER (RIVER/DAM/POND/STREAM/CANAL/IRRIGATION CHANNEL)", "BOTTLED WATER", "SAtCHET WATER"),
-  hh_other_water_source = c("PIPED IN DWELLING", "PIPED TO YARD/PLOT", "PIPED TO NEIGHBOR", "PUBLIC TAP/STANDPIPE", "TUBEWELL OR BOREHOLE", "PROTECTED WELL", "UNPROTECTED WELL", "RAINWATER", "TANKER TRUCK", "CART WITH SMALL TANK", "SURFACE WATER (RIVER/DAM/POND/STREAM/CANAL/IRRIGATION CHANNEL)", "BOTTLED WATER", "SAtCHET WATER"),
+  hh_drinking_water_source = c("PIPED IN DWELLING", "PIPED TO YARD/PLOT", "PIPED TO NEIGHBOR", "PUBLIC TAP/STANDPIPE", "TUBEWELL OR BOREHOLE", "PROTECTED WELL", "UNPROTECTED WELL", "RAINWATER", "TANKER TRUCK", "CART WITH SMALL TANK", "SURFACE WATER (RIVER/DAM/POND/STREAM/CANAL/IRRIGATION CHANNEL)", "BOTTLED WATER", "SATCHET WATER"),
+  hh_other_water_source = c("PIPED IN DWELLING", "PIPED TO YARD/PLOT", "PIPED TO NEIGHBOR", "PUBLIC TAP/STANDPIPE", "TUBEWELL OR BOREHOLE", "PROTECTED WELL", "UNPROTECTED WELL", "RAINWATER", "TANKER TRUCK", "CART WITH SMALL TANK", "SURFACE WATER (RIVER/DAM/POND/STREAM/CANAL/IRRIGATION CHANNEL)", "BOTTLED WATER", "SATCHET WATER"),
   hh_water_location = c("IN OWN DWELLING", "IN OWN YARD/PLOT", "ELSEWHERE"),
   hh_water_time_trip = c("LESS THAN 1 MINUTE", paste(1:30, "MINUTES"), "MORE THAN 30 MINUTES", "I DON'T KNOW"),
   hh_toilet_type = c("FLUSH TO PIPE SEWER SYSTEM", "FLUSH TO SEPTIC TANK", "FLUSH TO PIT LATRINE", "FLUSH TO SOMEWHERE ELSE", "FLUSH DON'T KNOW WHERE", "VENTILATED IMPROVED PIT LATRINE", "PIT LATRINE WITH SLAB", "PIT LATRINE WITHOUT SLAB/OPEN PIT", "COMPOSTING TOILET", "BUCKET TOILET", "HANGING TOILET/HANGING LATRINE", "NO FACILITY/BUSH/FIELD", "OTHERS (SPECIFY)"),
@@ -312,10 +313,17 @@ variable_labels <- c(
   "meta_date_created"               = "Date record was created",
   "meta_respondent_id"              = "Unique Respondent ID",
   "meta_status"                     = "Interview Completion Status",
-  "meta_reponse_date"               = "Date response was made",
+  "meta_response_date"              = "Date response was made",
   "meta_channel"                    = "Channel response was received",
+  "meta_longitude"                  = "Longitude of the respondent's location",
+  "meta_latitude"                   = "Latitude of the respondent's location",
+  "meta_survey_code"                = "Code identifying the survey",
+  "meta_survey_id"                  = "Unique survey ID",
+  "meta_survey_name"                = "Name of the survey",
   "gps_state_match"                 = "Spatial validation for respondents' State",
   "gps_lga_match"                   = "Spatial validation for respondents' LGA",  
+  "detected_state"                  = "State detected based on spatial or other data",
+  "detected_lga"                    = "Local Government Area detected based on spatial or other data",
   "demo_state"                      = "State of residence",
   "demo_lga"                        = "Local Government Area",
   "demo_town"                       = "Town/Village name",
@@ -323,9 +331,10 @@ variable_labels <- c(
   "demo_year_of_birth"              = "Year of birth (Numeric or 9997 for DK >15)",
   "demo_gender"                     = "Gender of respondent",
   "demo_edu_level"                  = "Highest level of formal education attended",
+  "demo_edu_informal"               = "Informal education level of the respondent",
   "demo_hh_children_under5"         = "Number of children under age 5 in household",
   "demo_hh_sleeping_rooms"          = "Number of rooms used for sleeping in the house",
-  "residency"                       = "Type of place of residence",
+  "urban_status"                    = "Urban status of the geocoordinates polygon match",
   "lga_dist_error_km"               = "Spatial: Distance error from reported LGA (km)",
   
   # --- Malaria Prevention ---
@@ -566,7 +575,139 @@ variable_labels <- c(
   "know_clean"      = "Knowledge: Clean surroundings",
   "know_screens"    = "Knowledge: Window screens",
   "know_other"      = "Knowledge: Other",
-  "know_dont"       = "Knowledge: Don't know"
+  "know_dont"       = "Knowledge: Don't know",
+  
+  # --- Derived stratifiers / indices ---
+  "derived_zone"                    = "Derived geopolitical zone (6 zones; 9=Missing)",
+  "derived_residence"               = "Derived residence type (Urban/Rural; 9=Missing)",
+  "derived_wealth_score"            = "Wealth score (PCA first component; complete cases only)",
+  "derived_wealth_quintile"         = "Derived wealth quintile (1=Lowest ... 5=Highest)",
+  "wealth_q"                        = "Wealth quintile (numeric copy of derived_wealth_quintile)",
+  "derived_edu_cat"                 = "Derived education category (4-level consolidation)",
+  "derived_age_group_w"             = "Derived women age group (15-49, 5-year bands; 9=Missing)",
+  "zone_num"                        = "Zone code (numeric copy of derived_zone)",
+  "residence_num"                   = "Residence code (numeric copy of derived_residence)",
+  "edu_cat"                         = "Education category code (numeric copy of derived_edu_cat)",
+  
+  # --- Universe flags (denominator definitions) ---
+  "u_all"                           = "Universe: all respondents",
+  "u_household"                     = "Universe: household-level tables (respondent-as-household)",
+  "u_women_15_49"                    = "Universe: women age 15-49",
+  "births_2020_2025_num"             = "Births 2020-2025 (numeric, type-safe)",
+  "u_recent_birth"                  = "Universe: women with recent birth proxy (births_2020_2025 > 0)",
+  "hh_u5_num"                       = "Household children under 5 count (numeric, type-safe)",
+  "u_hh_has_u5"                     = "Universe: household has child under 5 (1/0; NA if unknown)",
+  "u_child_youngest"                = "Universe: youngest child module (follows household has under-5)",
+  "u_child_fever"                   = "Universe: child fever module (child <5 in universe)",
+  "u_msg"                           = "Universe: heard malaria message in last 6 months",
+  "u_avoid"                         = "Universe: aware of malaria avoidance",
+  "u_internet"                      = "Universe: ever used internet",
+  
+  # --- Derived indicators: Nets / ITNs ---
+  "derived_hh_has_any_net"          = "Household owns any mosquito net (0/1; NA out-of-universe/DK)",
+  "derived_hh_has_itn"              = "Household has ITN/LLIN (0/1; NA out-of-universe/DK)",
+  "prev_is_itn_num"                 = "Net type ITN indicator (numeric, type-safe)",
+  "prev_net_brand_num"              = "Net brand code (numeric, type-safe)",
+  "derived_num_itns"                = "Number of ITNs in household (proxy; NA if missing)",
+  "derived_access_itn"              = "ITN access proxy (>=1 ITN per 2 household members)",
+  "derived_net_use_any_last_night"  = "Any household member slept under a net last night (0/1; NA DK)",
+  "derived_net_use_people_count"    = "Count of people who slept under net (if any used; NA otherwise)",
+  
+  # --- Derived indicators: ANC / IPTp ---
+  "derived_anc_any"                 = "Any ANC visit among women with recent birth proxy (0/1; NA out-of-universe)",
+  "derived_anc_skilled"             = "Skilled ANC provider among women with recent birth proxy (0/1; NA out-of-universe)",
+  "anc_visits_num"                  = "Total ANC visits (numeric, type-safe)",
+  "derived_anc_4plus"               = "Four or more ANC visits among women with recent birth proxy (0/1; NA out-of-universe)",
+  "sp_taken_num"                    = "Took SP/Fansidar during pregnancy (numeric, type-safe)",
+  "sp_doses_num"                    = "Number of SP/Fansidar doses (numeric, type-safe)",
+  "derived_iptp_1plus"              = "IPTp1+ (>=1 SP dose) among women with recent birth proxy (0/1; NA out-of-universe)",
+  "derived_iptp_2plus"              = "IPTp2+ (>=2 SP doses) among women with recent birth proxy (0/1; NA out-of-universe)",
+  "derived_iptp_3plus"              = "IPTp3+ (>=3 SP doses) among women with recent birth proxy (0/1; NA out-of-universe)",
+  
+  # --- Derived indicators: Child fever management ---
+  "derived_child_fever"             = "Child had fever in last 2 weeks (youngest child <5; 0/1; NA out-of-universe)",
+  "derived_fever_seek_advice"       = "Sought advice/treatment for child fever (0/1; NA out-of-universe)",
+  "delay_num"                       = "Delay to seek care (days; numeric, type-safe)",
+  "derived_fever_prompt_care"       = "Prompt care for child fever (same/next day; 0/1; NA out-of-universe)",
+  "derived_fever_tested"            = "Child fever tested (blood sample) (0/1; NA out-of-universe)",
+  "derived_fever_took_any_medicine" = "Child took any medicine for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_anti"         = "Child took any antimalarial for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_act"          = "Child took ACT for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_sp"           = "Child took SP for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_chloro"       = "Child took chloroquine for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_amod"         = "Child took amodiaquine for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_quin"         = "Child took quinine for fever (0/1; NA out-of-universe)",
+  "derived_fever_took_artes"        = "Child took artesunate/artemisinin for fever (0/1; NA out-of-universe)",
+  
+  # --- ACT timing & effectiveness (among ACT takers) ---
+  "act_delay_num"                   = "Delay to start ACT (numeric, type-safe)",
+  "derived_act_prompt"              = "ACT started promptly (same/next day) among ACT takers (0/1; NA out-of-universe)",
+  "derived_act_effective"           = "ACT perceived effective among ACT takers (0/1; NA out-of-universe)",
+  
+  # --- Perceptions & experiences ---
+  "afford_num"                      = "Drug affordability rating (numeric, type-safe)",
+  "derived_percep_affordable"       = "Perceived drugs affordable (1-2 vs 3-5) (0/1; NA missing)",
+  "gov_num"                         = "Government effort rating (numeric, type-safe)",
+  "derived_gov_effective"           = "Government perceived effective (ratings 4-5 vs 1-3) (0/1; NA missing)",
+  "stockout_num"                    = "Experienced stockout in last 6 months at government facility (numeric, type-safe)",
+  "free_num"                        = "Received free treatment in last 6 months at government facility (numeric, type-safe)",
+  "u_govt_visit_6m_stockout"         = "Universe: visited government facility in last 6 months (stockout question applicable)",
+  "u_govt_visit_6m_free"             = "Universe: visited government facility in last 6 months (free treatment question applicable)",
+  "derived_exp_stockout"            = "Experienced stockout (among govt visitors) (0/1; NA out-of-universe)",
+  "derived_exp_free_tx"             = "Received free treatment (among govt visitors) (0/1; NA out-of-universe)",
+  "demo_gender_num"                 = "Numeric representation of respondent's gender (1=Male, 2=Female)",
+  "demo_age_num"                    = "Numeric representation of respondent's age",
+  "demo_state_num"                  = "Numeric code representing respondent's state of residence",
+  "hh_nets_num"                     = "Number of mosquito nets in the household",
+  "hh_size_num"                     = "Total number of people in the household",
+  "ppl_slept_net_num"               = "Number of people who slept under the mosquito net last night",
+  # --- Additional derived variables / weighting helpers / top-code flags ---
+  "derived_age_group_4"              = "Derived age group (15-24, 25-34, 35-44, 45+)",
+  "age_group_4"                      = "Age group 4-category code (numeric copy of derived_age_group_4)",
+  
+  "anc_first_month_num"              = "Months pregnant at first ANC visit (0 = less than one month, including 2-3 weeks)",
+  "preg_month_num"                   = "Current pregnancy duration in months (0 = less than one month, including 2-3 weeks)",
+  "derived_anc_first_trimester"      = "First ANC visit occurred in first trimester (0/1; 0 month includes less than one month, 2 weeks, and 3 weeks)",
+  "derived_currently_pregnant"       = "Currently pregnant (0/1; NA if missing or uncertain)",
+  "derived_pregnancy_first_trimester"= "Current pregnancy is in first trimester (0/1; 0 month includes less than one month, 2 weeks, and 3 weeks)",
+  
+  "derived_prop_hh_slept_under_net"  = "Proportion of household members who slept under a mosquito net last night",
+  "u_affordability"                  = "Universe: affordability question observed",
+  "u_recent_fever_hh"                = "Universe: household had fever in last 2 weeks",
+  "test_cost_num"                    = "Cost of malaria test (numeric, type-safe)",
+  "drug_cost_num"                    = "Cost of malaria drugs (numeric, type-safe)",
+  "drug_buy_time_num"                = "Time since malaria drug purchase (numeric, type-safe)",
+  "derived_test_paid"                = "Paid anything for malaria test among households with recent fever (0/1; NA out-of-universe)",
+  "derived_drug_paid"                = "Paid anything for malaria drugs among households with recent fever (0/1; NA out-of-universe)",
+  
+  "tc_demo_hh_children_under5"       = "Top-code flag for number of children under age 5 in household",
+  "tc_demo_hh_sleeping_rooms"        = "Top-code flag for number of rooms used for sleeping",
+  "tc_prev_num_mosquito_nets"        = "Top-code flag for number of mosquito nets owned by household",
+  "tc_prev_num_people_slept_net"     = "Top-code flag for number of people who slept under mosquito net last night",
+  "tc_prev_months_since_net_obtained"= "Top-code flag for months since household obtained mosquito net",
+  "tc_women_births_2020_2025"        = "Top-code flag for number of births between 2020 and 2025",
+  "tc_women_anc_total_visits"        = "Top-code flag for total ANC visits during pregnancy",
+  "tc_women_sp_fansidar_doses"       = "Top-code flag for number of SP/Fansidar doses taken during pregnancy",
+  "tc_hh_total_persons_v1"           = "Top-code flag for total persons in household (V1)",
+  "tc_hh_total_persons_v2"           = "Top-code flag for total persons in household (V2)",
+  "tc_hh_members_under5"             = "Top-code flag for number of household members under 5 years old",
+  "tc_hh_total_persons_usually_v3"   = "Top-code flag for total persons usually living in household (V3)",
+  "tc_hh_water_time_trip"            = "Top-code flag for time taken to fetch water (round trip)",
+  "tc_hh_toilet_share_count"         = "Top-code flag for number of households sharing the toilet facility",
+  "tc_hh_num_cows_bulls"             = "Top-code flag for number of cows or bulls owned",
+  "tc_hh_num_other_cattle"           = "Top-code flag for number of other cattle owned",
+  "tc_hh_num_horses_donkeys"         = "Top-code flag for number of horses, donkeys, or mules owned",
+  "tc_hh_num_goats"                  = "Top-code flag for number of goats owned",
+  "tc_hh_num_sheep"                  = "Top-code flag for number of sheep owned",
+  "tc_hh_num_poultry"                = "Top-code flag for number of chickens or other poultry owned",
+  "tc_hh_num_pigs"                   = "Top-code flag for number of pigs owned",
+  "tc_hh_num_camels"                 = "Top-code flag for number of camels owned",
+  "tc_hh_num_agri_plots"             = "Top-code flag for number of agricultural land plots owned",
+  
+  "w_base"                           = "Base weight for calibration (set to 1 for all eligible records)",
+  "w_calibrated_raw"                 = "Raw calibrated post-stratification weight before trimming",
+  "w_calibrated_trim"                = "Trimmed and rescaled calibrated post-stratification weight",
+  "calib_ok"                         = "Eligible for calibration weighting based on complete benchmark variables"
 )
 
 
@@ -581,14 +722,14 @@ value_labels <- list(
   
   status = c("Completed" = 1, "Missing" = 9 ),
   
-  match = c("Match" = 1, "Mismatch" = 0, "Missing" = 9 ),
+  match = c("Match" = 1, "Mismatch" = 0, "Outside Boundary" = 7, "Missing" = 9 ),
   
   channel = c("Direct" = 1, "Outbound" = 2, "Missing" = 9),
   
   gender = c("Male" = 1, "Female" = 2, "Missing" = 9),
   
   education = c("No education" = 0, "Primary" = 1, "Secondary" = 2, 
-                "Higher (Post Secondary)" = 3, "Missing" = 9),
+                "Higher (Post Secondary)" = 3, "Vocational" = 4, "Missing" = 9),
   
   # --- Geography & Demographics ---
   states = c("Abia"=1, "Adamawa"=2, "Akwa Ibom"=3, "Anambra"=4, "Bauchi"=5, "Bayelsa"=6, 
@@ -607,13 +748,15 @@ value_labels <- list(
   
   age_special = c("Undisclosed (>15)" = 997),
   
+  urban_status = c("Urban" = 1, "Rural" = 0),
+  
   # --- Locations (Treatment & Advice) ---
   locations = c("Government Hospital" = 1, "Private Hospital/Clinic" = 2, "NGO Hospital" = 3, 
                 "Mobile Clinic" = 4, "Private Doctor" = 5, "Community Nurse/Health Worker" = 6, 
-                "Pharmacy" = 7, "Local Drug Store/Chemist" = 8, "Traditional Healer" = 10, 
+                "Pharmacy" = 7, "Local Drug Store/Chemist" = 8, "Itinerant drug seller" = 9, "Traditional Healer" = 10, 
                 "Religious Healer" = 11, "Missing" = 99),
   
-  # --- Financial Costs (Fix A: Discrepancy Split) ---
+  # --- Financial Costs ---
   costs_standard = c("Free" = 0, "N1 - N999" = 1, "N1,000 - N1,999" = 2, "N2,000 - N2,999" = 3, 
                      "N3,000 - N3,999" = 4, "N4,000 - N4,999" = 5, "N5,000 - N5,999" = 6, 
                      "N6,000 - N6,999" = 7, "N7,000 - N7,999" = 8, "N8,000 - N8,999" = 9, 
@@ -627,7 +770,7 @@ value_labels <- list(
                       "N9,000 - N9,999" = 10, "Above N10,000" = 11, "Don't Know" = 98, "Missing" = 99),
   
   # --- Timing & Delays ---
-  time_facility = c("Less than 30 mins" = 1, "30 mins" = 2, "More than 30 mins" = 3, 
+  time_facility = c("Less than 30 mins" = 1, "30 mins to 1 hour" = 2, "More than 1 hour" = 3, 
                     "Don't Know" = 8, "Missing" = 9),
   
   delays = c("Same Day" = 0, "Next Day" = 1, "2 Days" = 2, "3+ Days" = 3, 
@@ -637,8 +780,9 @@ value_labels <- list(
                     "6-12 Months ago" = 3, "Over one year ago" = 4, 
                     "Don't Know" = 8, "Missing" = 9),
   
-  weeks_special = c(
-    "More than 42 weeks" = 43, 
+  months_special = c(
+    "Less than one month" = 0,
+    "10 months or More" = 10, 
     "Don't Know" = 98
   ),
   
@@ -687,11 +831,11 @@ value_labels <- list(
                  "Somewhat Ineffective" = 2, "Very Ineffective" = 1, "Missing" = 9),
   
   # --- Household Characteristics ---
-  water_source = c("Piped in Dwelling" = 11, "Piped to Yard/Plot" = 12, "Piped to Neighbor" = 13,
-                   "Public Tap/Standpipe" = 14, "Tube Well or Borehole" = 21, "Protected Well" = 31,
+  water_source = c("Piped in Dwelling/Yard/Plot" = 11, "Piped to Neighbor" = 12,
+                   "Public Tap/Standpipe" = 13, "Tube Well or Borehole" = 21, "Protected Well" = 31,
                    "Unprotected Well" = 32, "Protected Spring" = 41, "Unprotected Spring" = 42, 
                    "Rainwater" = 51, "Tanker Truck" = 61, "Cart with Small Tank" = 71, 
-                   "Surface Water" = 81, "Bottled Water" = 91, "Sachet Water" = 92, "Other" = 96, "Missing" = 99),
+                   "Surface Water" = 81, "Bottled Water" = 91, "Satchet Water" = 92, "Other" = 96, "Missing" = 99),
   
   toilet_type = c("Flush to Piped Sewer" = 11, "Flush to Septic Tank" = 12, "Flush to Pit Latrine" = 13,
                   "Flush to Somewhere Else" = 14, "Flush Don't Know" = 15, "VIP Latrine" = 21, 
@@ -726,13 +870,64 @@ value_labels <- list(
   
   relation = c("Head" = 1, "Wife/Husband" = 2, "Son/Daughter" = 3, "Son-in-law/Daughter-in-law" = 4,
                "Grandchild" = 5, "Parent" = 6, "Parent-in-law" = 7, "Brother/Sister" = 8,
-               "Other Relative" = 9, "Adopted/Stepchild" = 10, "Not Related" = 11, 
+               "Other Relative" = 9, "Adopted/Stepchild" = 10, "Not Related" = 11, "Co-wife" = 12,
                "Don't Know" = 98, "Missing" = 99),
   
   religion = c("Catholic" = 1, "Christian" = 2, "Islam" = 3, "Traditional" = 4, "Other" = 6, "Missing" = 9),
   
-  media_frequency = c("Daily/Often" = 1, "Weekly/Rarely" = 2, "Never" = 3, "Missing" = 9)
+  media_frequency = c("Daily/Often" = 1, "Weekly/Rarely" = 2, "Never" = 3, "Missing" = 9),
+  
+  # -- Derived Variables -- #
+  
+  # --- Converted from val_lbl_* to list style ---
+  zone = c(
+    "North Central" = 1, "North East" = 2, "North West" = 3,
+    "South East" = 4, "South South" = 5, "South West" = 6,
+    "Missing" = 9
+  ),
+  
+  derived_residence = c("Urban" = 1, "Rural" = 2, "Missing" = 9),
+  
+  wealth_quintile = c(
+    "Lowest" = 1, "Second" = 2, "Middle" = 3, "Fourth" = 4, "Highest" = 5,
+    "Missing" = 9
+  ),
+  
+  edu4 = c(
+    "No Education" = 1, "Primary" = 2, "Secondary" = 3,
+    "More than secondary" = 4, "Missing" = 9
+  ),
+  
+  age_group_women = c(
+    "15-19" = 1, "20-24" = 2, "25-29" = 3, "30-34" = 4,
+    "35-39" = 5, "40-44" = 6, "45-49" = 7,
+    "Missing" = 9
+  ),
+  
+  # --- Additional value labels for newly added derived variables ---
+  
+  age_group_4 = c(
+    "15-24" = 1,
+    "25-34" = 2,
+    "35-44" = 3,
+    "45+"   = 4,
+    "Missing" = 9
+  ),
+  
+  trimester = c(
+    "No" = 0,
+    "Yes" = 1,
+    "Missing" = 9
+  ),
+  
+  topcode_flag = c(
+    "No" = 0,
+    "Yes" = 1
+  ),
+  
+  yesno_simple = c("No" = 0, "Yes" = 1, "Missing" = 9)
 )
+
 # 3. Save as a Unified List
 sproxil_metadata <- list(
   column_mapping = column_mapping,
