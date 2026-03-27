@@ -1,7 +1,7 @@
 # ==============================================================================
 # PROJECT: Sproxil Malaria Survey Analysis
 # SCRIPT:  Attach Recommended Post-Stratification Weight
-# AUTHOR:  Ikechukwu Onuko / OpenAI revision
+# AUTHOR:  Corona Management Systems
 # DATE:    18 March 2026
 #
 # PURPOSE:

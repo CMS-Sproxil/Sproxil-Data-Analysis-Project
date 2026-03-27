@@ -1,7 +1,7 @@
 # ==============================================================================
 # PROJECT: Sproxil Malaria Survey Analysis
 # SCRIPT:  Post-Weighting Wealth Index Reconstruction
-# AUTHOR:  Ikechukwu Onuko / OpenAI revision
+# AUTHOR:  Corona Management Syste
 # DATE:    18 March 2026
 #
 # PURPOSE:

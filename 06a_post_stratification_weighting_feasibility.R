@@ -1,7 +1,7 @@
 # ==============================================================================
 # PROJECT: Sproxil Malaria Survey Analysis
 # SCRIPT:  Integrated Weighting Feasibility, Impact Review, Finalisation, and Wealth Reconstruction
-# AUTHOR:  Ikechukwu Onuko / OpenAI integrated revision
+# AUTHOR:  Corona Management Systems
 # DATE:    18 March 2026
 #
 # PURPOSE:
