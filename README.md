@@ -170,9 +170,8 @@ source("scripts/99_run_pipeline.R")
 
 ## 👤 Maintainer
 
-**Name:** [Your Name]  
 **Organisation:** Corona Management Systems  
-**Project:** Sproxil Malaria Insight Survey
+**Project:** Sproxil Malaria Data Insight Survey
 
 ---
 
