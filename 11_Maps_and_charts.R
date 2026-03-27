@@ -1,6 +1,6 @@
 # ==============================================================================
 # PROJECT: Sproxil Malaria Survey Analysis
-# SCRIPT:  10_State_Choropleth_Maps_NMIS_Style.R
+# SCRIPT:  10_State_Maps.R
 # AUTHOR:  Corona Management Systems
 # PURPOSE: Generate state choropleth maps from Sproxil_Analysis_Ready.rds
 #          with dynamic integer ranges and darker shades indicating worse results
